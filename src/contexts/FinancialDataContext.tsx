@@ -97,12 +97,16 @@ interface OriginalFundingSources {
 interface Product {
   id: string;
   name: string;
+  parcelleId?: string; // Nouvelle liaison avec parcelle
   unitsPerMonth: number;
   pricePerUnit: number;
   cogsPerUnit: number;
   cropType?: string;
   unit?: string;
-  cycleMonths?: number;
+  cycleMonths?: number; // Durée du cycle en mois
+  rendementEstime?: number; // Rendement estimé par hectare
+  rendementReel?: number; // Rendement réel saisi manuellement
+  periodeRepos?: number; // Période de repos en mois entre cycles
 }
 
 interface AdditionalParameters {
@@ -163,6 +167,8 @@ interface FinancialDataContextType {
   removeProduct: (id: string) => void;
   updateAdditionalParameters: (params: Partial<AdditionalParameters>) => void;
   updateOperatingExpenses: (expenses: OperatingExpense[]) => void;
+  assignProductToParcelle: (productId: string, parcelleId: string) => void;
+  calculateProductRevenue: (productId: string) => number;
   calculations: {
     totalFixedAssets: number;
     totalOperatingCapital: number;
@@ -353,6 +359,33 @@ export const FinancialDataProvider: React.FC<{ children: React.ReactNode }> = ({
     }));
   }, []);
 
+  const assignProductToParcelle = useCallback((productId: string, parcelleId: string) => {
+    setData(prev => ({
+      ...prev,
+      products: prev.products.map(p => 
+        p.id === productId 
+          ? { ...p, parcelleId } 
+          : p
+      )
+    }));
+  }, []);
+
+  const calculateProductRevenue = useCallback((productId: string): number => {
+    const product = data.products.find(p => p.id === productId);
+    if (!product || !product.parcelleId) return 0;
+
+    // Calculer le nombre de cycles par an
+    const cycleMonths = product.cycleMonths || 3; // Par défaut 3 mois
+    const periodeRepos = product.periodeRepos || 0; // Pas de repos par défaut
+    const cyclesParAn = Math.floor(12 / (cycleMonths + periodeRepos));
+
+    // Utiliser le rendement réel si disponible, sinon l'estimé
+    const rendement = product.rendementReel || product.rendementEstime || product.unitsPerMonth;
+    
+    // Revenue = rendement × prix × cycles par an
+    return rendement * product.pricePerUnit * cyclesParAn;
+  }, [data.products]);
+
   // Calculations
   const totalFixedAssets = data.fixedAssets.reduce((total, asset) => total + (asset.quantity * asset.unitPrice), 0);
   const totalOperatingCapital = data.operatingCapital.reduce((total, item) => total + item.amount, 0);
@@ -409,6 +442,8 @@ export const FinancialDataProvider: React.FC<{ children: React.ReactNode }> = ({
     removeProduct,
     updateAdditionalParameters,
     updateOperatingExpenses,
+    assignProductToParcelle,
+    calculateProductRevenue,
     calculations
   };
 
