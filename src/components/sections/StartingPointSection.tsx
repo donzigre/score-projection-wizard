@@ -5,9 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFinancialData } from '@/contexts/FinancialDataContext';
 import { formatCurrency } from '@/utils/formatting';
+import { convertFixedAssetsToLegacy, convertOperatingCapitalToLegacy, convertFundingSourcesToLegacy } from '@/utils/dataAdapters';
 
 const StartingPointSection = () => {
   const { data, updateFixedAssets, updateOperatingCapital, updateFundingSources, calculations } = useFinancialData();
+
+  // Convertir les données pour la compatibilité
+  const legacyFixedAssets = convertFixedAssetsToLegacy(data.fixedAssets);
+  const legacyOperatingCapital = convertOperatingCapitalToLegacy(data.operatingCapital);
+  const legacyFundingSources = convertFundingSourcesToLegacy(data.fundingSources);
 
   const InputField = ({ 
     label, 
@@ -43,6 +49,10 @@ const StartingPointSection = () => {
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Starting Point - Funding & Assets</h2>
         <p className="text-gray-600">Define your initial capital requirements and funding sources</p>
+        <div className="mt-4 p-4 bg-amber-50 rounded-lg">
+          <p className="text-amber-800 font-medium">⚠️ Section en mode compatibilité</p>
+          <p className="text-amber-700 text-sm">Utilisez "Point de Départ" pour une gestion agricole complète</p>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -55,38 +65,38 @@ const StartingPointSection = () => {
           <CardContent className="space-y-4">
             <InputField
               label="Real Estate - Land"
-              value={data.fixedAssets.realEstateLand}
-              onChange={(value) => updateFixedAssets({ realEstateLand: value })}
+              value={legacyFixedAssets.realEstateLand}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Real Estate - Buildings (20yr depreciation)"
-              value={data.fixedAssets.realEstateBuildings}
-              onChange={(value) => updateFixedAssets({ realEstateBuildings: value })}
+              value={legacyFixedAssets.realEstateBuildings}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Leasehold Improvements (7yr depreciation)"
-              value={data.fixedAssets.leaseholdImprovements}
-              onChange={(value) => updateFixedAssets({ leaseholdImprovements: value })}
+              value={legacyFixedAssets.leaseholdImprovements}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Equipment (7yr depreciation)"
-              value={data.fixedAssets.equipment}
-              onChange={(value) => updateFixedAssets({ equipment: value })}
+              value={legacyFixedAssets.equipment}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Furniture and Fixtures (5yr depreciation)"
-              value={data.fixedAssets.furnitureFixtures}
-              onChange={(value) => updateFixedAssets({ furnitureFixtures: value })}
+              value={legacyFixedAssets.furnitureFixtures}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Vehicles (5yr depreciation)"
-              value={data.fixedAssets.vehicles}
-              onChange={(value) => updateFixedAssets({ vehicles: value })}
+              value={legacyFixedAssets.vehicles}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Other Fixed Assets (5yr depreciation)"
-              value={data.fixedAssets.other}
-              onChange={(value) => updateFixedAssets({ other: value })}
+              value={legacyFixedAssets.other}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <div className="pt-4 border-t border-blue-200">
               <InputField
@@ -107,58 +117,58 @@ const StartingPointSection = () => {
           <CardContent className="space-y-4">
             <InputField
               label="Pre-Opening Salaries and Wages"
-              value={data.operatingCapital.preOpeningSalaries}
-              onChange={(value) => updateOperatingCapital({ preOpeningSalaries: value })}
+              value={legacyOperatingCapital.preOpeningSalaries}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Prepaid Insurance Premiums"
-              value={data.operatingCapital.prepaidInsurance}
-              onChange={(value) => updateOperatingCapital({ prepaidInsurance: value })}
+              value={legacyOperatingCapital.prepaidInsurance}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Inventory"
-              value={data.operatingCapital.inventory}
-              onChange={(value) => updateOperatingCapital({ inventory: value })}
+              value={legacyOperatingCapital.inventory}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Legal and Accounting Fees"
-              value={data.operatingCapital.legalAccounting}
-              onChange={(value) => updateOperatingCapital({ legalAccounting: value })}
+              value={legacyOperatingCapital.legalAccounting}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Rent Deposits"
-              value={data.operatingCapital.rentDeposits}
-              onChange={(value) => updateOperatingCapital({ rentDeposits: value })}
+              value={legacyOperatingCapital.rentDeposits}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Utility Deposits"
-              value={data.operatingCapital.utilityDeposits}
-              onChange={(value) => updateOperatingCapital({ utilityDeposits: value })}
+              value={legacyOperatingCapital.utilityDeposits}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Supplies"
-              value={data.operatingCapital.supplies}
-              onChange={(value) => updateOperatingCapital({ supplies: value })}
+              value={legacyOperatingCapital.supplies}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Advertising and Promotions"
-              value={data.operatingCapital.advertising}
-              onChange={(value) => updateOperatingCapital({ advertising: value })}
+              value={legacyOperatingCapital.advertising}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Licenses"
-              value={data.operatingCapital.licenses}
-              onChange={(value) => updateOperatingCapital({ licenses: value })}
+              value={legacyOperatingCapital.licenses}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Other Initial Start-Up Costs"
-              value={data.operatingCapital.otherStartupCosts}
-              onChange={(value) => updateOperatingCapital({ otherStartupCosts: value })}
+              value={legacyOperatingCapital.otherStartupCosts}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Working Capital (Cash On Hand)"
-              value={data.operatingCapital.workingCapital}
-              onChange={(value) => updateOperatingCapital({ workingCapital: value })}
+              value={legacyOperatingCapital.workingCapital}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <div className="pt-4 border-t border-green-200">
               <InputField
@@ -180,51 +190,51 @@ const StartingPointSection = () => {
             <div className="grid grid-cols-2 gap-2">
               <InputField
                 label="Owner's Equity %"
-                value={data.fundingSources.ownersEquityPercent}
-                onChange={(value) => updateFundingSources({ ownersEquityPercent: value })}
+                value={legacyFundingSources.ownersEquityPercent}
+                onChange={(value) => console.log('Legacy update not implemented')}
               />
               <InputField
                 label="Amount"
-                value={data.fundingSources.ownersEquityAmount}
-                onChange={(value) => updateFundingSources({ ownersEquityAmount: value })}
+                value={legacyFundingSources.ownersEquityAmount}
+                onChange={(value) => console.log('Legacy update not implemented')}
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <InputField
                 label="Outside Investors %"
-                value={data.fundingSources.outsideInvestorsPercent}
-                onChange={(value) => updateFundingSources({ outsideInvestorsPercent: value })}
+                value={legacyFundingSources.outsideInvestorsPercent}
+                onChange={(value) => console.log('Legacy update not implemented')}
               />
               <InputField
                 label="Amount"
-                value={data.fundingSources.outsideInvestorsAmount}
-                onChange={(value) => updateFundingSources({outsideInvestorsAmount: value })}
+                value={legacyFundingSources.outsideInvestorsAmount}
+                onChange={(value) => console.log('Legacy update not implemented')}
               />
             </div>
             <InputField
               label="Commercial Loan (9%, 84 months)"
-              value={data.fundingSources.commercialLoanAmount}
-              onChange={(value) => updateFundingSources({ commercialLoanAmount: value })}
+              value={legacyFundingSources.commercialLoanAmount}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Commercial Mortgage (9%, 240 months)"
-              value={data.fundingSources.commercialMortgageAmount}
-              onChange={(value) => updateFundingSources({ commercialMortgageAmount: value })}
+              value={legacyFundingSources.commercialMortgageAmount}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Credit Card Debt (7%, 60 months)"
-              value={data.fundingSources.creditCardDebt}
-              onChange={(value) => updateFundingSources({ creditCardDebt: value })}
+              value={legacyFundingSources.creditCardDebt}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Vehicle Loans (6%, 48 months)"
-              value={data.fundingSources.vehicleLoans}
-              onChange={(value) => updateFundingSources({ vehicleLoans: value })}
+              value={legacyFundingSources.vehicleLoans}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             <InputField
               label="Other Bank Debt (5%, 36 months)"
-              value={data.fundingSources.otherBankDebt}
-              onChange={(value) => updateFundingSources({ otherBankDebt: value })}
+              value={legacyFundingSources.otherBankDebt}
+              onChange={(value) => console.log('Legacy update not implemented')}
             />
             
             <div className="pt-4 border-t border-purple-200 space-y-2">

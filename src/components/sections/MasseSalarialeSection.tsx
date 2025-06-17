@@ -1,377 +1,319 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Users, Calculator } from "lucide-react";
-import { useFinancialData, Employee, PayrollData } from '@/contexts/FinancialDataContext';
+import { useFinancialData, Employee } from '@/contexts/FinancialDataContext';
 import { formatCurrency } from '@/utils/formatting';
+import { Plus, Trash2, Users, Calculator } from 'lucide-react';
+import { InfoCard } from '@/components/ui/InfoCard';
 
 const MasseSalarialeSection = () => {
   const { data, updatePayrollData } = useFinancialData();
-  const [employees, setEmployees] = useState<Employee[]>(data.payrollData.employees);
-  const [chargesSociales, setChargesSociales] = useState(data.payrollData.chargesSociales);
-  const [inflationAnnuelle, setInflationAnnuelle] = useState(data.payrollData.inflationAnnuelle);
-
-  useEffect(() => {
-    setEmployees(data.payrollData.employees);
-    setChargesSociales(data.payrollData.chargesSociales);
-    setInflationAnnuelle(data.payrollData.inflationAnnuelle);
-  }, [data.payrollData]);
-
-  const calculateCharges = (salaireBrut: number, typeContrat: string) => {
-    if (typeContrat === 'Consultant') return { cnpsEmploye: 0, cnpsEmployeur: 0, autresCharges: 0 };
-    
-    const cnpsEmploye = salaireBrut * (chargesSociales.cnpsEmploye / 100);
-    const cnpsEmployeur = salaireBrut * (chargesSociales.cnpsEmployeur / 100);
-    const autresCharges = salaireBrut * (chargesSociales.autresTaxes / 100);
-    
-    return { cnpsEmploye, cnpsEmployeur, autresCharges };
-  };
 
   const addEmployee = () => {
     const newEmployee: Employee = {
       id: Date.now().toString(),
-      nom: '',
-      prenom: '',
-      poste: '',
+      nom: 'NOUVEAU',
+      prenom: 'Employé',
+      poste: 'Ouvrier agricole',
       typeContrat: 'CDI',
-      salaireBrut: 0,
+      salaireBrut: 200000,
       heuresParMois: 173,
       tauxHoraire: 0,
       cnpsEmploye: 0,
       cnpsEmployeur: 0,
       autresCharges: 0
     };
-    const updated = [...employees, newEmployee];
-    setEmployees(updated);
-    updatePayrollData({ employees: updated });
+
+    const updatedEmployees = [...data.payrollData.employees, newEmployee];
+    updatePayrollData({ employees: updatedEmployees });
   };
 
   const removeEmployee = (id: string) => {
-    const updated = employees.filter(emp => emp.id !== id);
-    setEmployees(updated);
-    updatePayrollData({ employees: updated });
+    const updatedEmployees = data.payrollData.employees.filter(emp => emp.id !== id);
+    updatePayrollData({ employees: updatedEmployees });
   };
 
   const updateEmployee = (id: string, field: keyof Employee, value: any) => {
-    const updated = employees.map(emp => {
+    const updatedEmployees = data.payrollData.employees.map(emp => {
       if (emp.id === id) {
         const updatedEmp = { ...emp, [field]: value };
         
-        // Recalculer les charges si le salaire ou le type de contrat change
+        // Recalculer automatiquement les charges CNPS
         if (field === 'salaireBrut' || field === 'typeContrat') {
-          const charges = calculateCharges(
-            field === 'salaireBrut' ? value : updatedEmp.salaireBrut,
-            field === 'typeContrat' ? value : updatedEmp.typeContrat
-          );
-          Object.assign(updatedEmp, charges);
+          const salaire = parseFloat(updatedEmp.salaireBrut.toString()) || 0;
+          if (updatedEmp.typeContrat !== 'Saisonnier') {
+            updatedEmp.cnpsEmploye = Math.round(salaire * 0.032); // 3.2%
+            updatedEmp.cnpsEmployeur = Math.round(salaire * 0.163); // 16.3%
+            updatedEmp.autresCharges = Math.round(salaire * 0.05); // 5% autres charges
+            updatedEmp.tauxHoraire = 0;
+          } else {
+            updatedEmp.cnpsEmploye = 0;
+            updatedEmp.cnpsEmployeur = 0;
+            updatedEmp.autresCharges = 0;
+          }
         }
         
-        // Pour les saisonniers, calculer le salaire en fonction du taux horaire
         if (field === 'tauxHoraire' && updatedEmp.typeContrat === 'Saisonnier') {
-          updatedEmp.salaireBrut = value * updatedEmp.heuresParMois;
-          const charges = calculateCharges(updatedEmp.salaireBrut, updatedEmp.typeContrat);
-          Object.assign(updatedEmp, charges);
+          const tauxHoraire = parseFloat(updatedEmp.tauxHoraire.toString()) || 0;
+          updatedEmp.salaireBrut = tauxHoraire * updatedEmp.heuresParMois;
         }
         
         return updatedEmp;
       }
       return emp;
     });
-    setEmployees(updated);
-    updatePayrollData({ employees: updated });
-  };
-
-  const updateChargesSociales = (field: keyof typeof chargesSociales, value: number) => {
-    const updated = { ...chargesSociales, [field]: value };
-    setChargesSociales(updated);
     
-    // Recalculer toutes les charges pour tous les employés
-    const updatedEmployees = employees.map(emp => {
-      const charges = calculateCharges(emp.salaireBrut, emp.typeContrat);
-      return { ...emp, ...charges };
-    });
-    
-    setEmployees(updatedEmployees);
-    updatePayrollData({ 
-      chargesSociales: updated, 
-      employees: updatedEmployees 
-    });
+    updatePayrollData({ employees: updatedEmployees });
   };
 
-  const getTotalMonthlySalary = () => {
-    return employees.reduce((total, emp) => {
-      return total + (emp.typeContrat === 'Saisonnier' ? emp.tauxHoraire * emp.heuresParMois : emp.salaireBrut);
-    }, 0);
-  };
+  const totalSalaireBrut = data.payrollData.employees.reduce((total, emp) => {
+    return total + (parseFloat(emp.salaireBrut.toString()) || 0);
+  }, 0);
 
-  const getTotalMonthlyCharges = () => {
-    return employees.reduce((total, emp) => {
-      return total + emp.cnpsEmployeur + emp.autresCharges;
-    }, 0);
-  };
+  const totalChargesEmployeur = data.payrollData.employees.reduce((total, emp) => {
+    return total + (parseFloat(emp.cnpsEmployeur.toString()) || 0) + (parseFloat(emp.autresCharges.toString()) || 0);
+  }, 0);
 
-  const getTotalMonthlyCost = () => getTotalMonthlySalary() + getTotalMonthlyCharges();
-
-  const getProjectionYear = (year: number) => {
-    const inflation = Math.pow(1 + inflationAnnuelle / 100, year);
-    return getTotalMonthlyCost() * 12 * inflation;
-  };
+  const totalCoutSalarial = totalSalaireBrut + totalChargesEmployeur;
 
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Masse Salariale - Agriculture Ivoirienne</h2>
-        <p className="text-gray-600">Gérez vos employés et calculez les charges sociales selon la législation ivoirienne</p>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">Masse Salariale Agricole</h2>
+        <p className="text-gray-600">Gérez vos employés et calculez automatiquement les charges sociales ivoiriennes</p>
       </div>
 
-      {/* Paramètres des charges sociales */}
-      <Card className="bg-gradient-to-br from-blue-50 to-white">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calculator className="h-5 w-5" />
-            Paramètres des Charges Sociales (CNPS Côte d'Ivoire)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-4 gap-4">
-            <div>
-              <Label>CNPS Employeur (%)</Label>
-              <Input
-                type="number"
-                step="0.1"
-                value={chargesSociales.cnpsEmployeur}
-                onChange={(e) => updateChargesSociales('cnpsEmployeur', Number(e.target.value))}
-                placeholder="16.3"
-              />
+      <div className="grid md:grid-cols-2 gap-6">
+        <InfoCard 
+          title="Charges Sociales en Côte d'Ivoire"
+          content={
+            <div className="space-y-3 text-sm text-gray-600">
+              <p><strong>📊 CNPS Employé :</strong> 3,2% du salaire brut</p>
+              <p><strong>🏢 CNPS Employeur :</strong> 16,3% du salaire brut</p>
+              <p><strong>💰 Autres charges :</strong> ~5% (formation, médecine du travail, etc.)</p>
+              <p><strong>⏰ Temps de travail :</strong> 40h/semaine = 173h/mois</p>
+              <div className="mt-4 p-3 bg-blue-100 rounded-lg">
+                <p className="font-medium text-blue-900">💡 Conseil :</p>
+                <p className="text-blue-800">Les travailleurs saisonniers ont des régimes spéciaux</p>
+              </div>
             </div>
-            <div>
-              <Label>CNPS Employé (%)</Label>
-              <Input
-                type="number"
-                step="0.1"
-                value={chargesSociales.cnpsEmploye}
-                onChange={(e) => updateChargesSociales('cnpsEmploye', Number(e.target.value))}
-                placeholder="3.2"
-              />
-            </div>
-            <div>
-              <Label>Autres Taxes (%)</Label>
-              <Input
-                type="number"
-                step="0.1"
-                value={chargesSociales.autresTaxes}
-                onChange={(e) => updateChargesSociales('autresTaxes', Number(e.target.value))}
-                placeholder="5.0"
-              />
-            </div>
-            <div>
-              <Label>Inflation Annuelle (%)</Label>
-              <Input
-                type="number"
-                step="0.1"
-                value={inflationAnnuelle}
-                onChange={(e) => {
-                  setInflationAnnuelle(Number(e.target.value));
-                  updatePayrollData({ inflationAnnuelle: Number(e.target.value) });
-                }}
-                placeholder="3.5"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          }
+        />
 
-      {/* Gestion des employés */}
+        <Card className="bg-gradient-to-br from-green-50 to-blue-50">
+          <CardHeader>
+            <CardTitle className="text-blue-900 flex items-center gap-2">
+              <Calculator className="h-5 w-5" />
+              Résumé Masse Salariale
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Salaires bruts totaux :</span>
+                <span className="font-bold text-blue-600">{formatCurrency(totalSalaireBrut)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Charges employeur :</span>
+                <span className="font-bold text-orange-600">{formatCurrency(totalChargesEmployeur)}</span>
+              </div>
+              <div className="flex justify-between border-t pt-2">
+                <span className="text-gray-800 font-medium">Coût total mensuel :</span>
+                <span className="font-bold text-purple-600">{formatCurrency(totalCoutSalarial)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-800 font-medium">Coût annuel estimé :</span>
+                <span className="font-bold text-green-600">{formatCurrency(totalCoutSalarial * 12)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Gestion des Employés
+            Gestion des Employés ({data.payrollData.employees.length})
           </CardTitle>
-          <Button onClick={addEmployee} size="sm">
+          <Button onClick={addEmployee} className="bg-green-600 hover:bg-green-700">
             <Plus className="h-4 w-4 mr-2" />
-            Ajouter un employé
+            Ajouter Employé
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="grid grid-cols-12 gap-2 font-semibold text-sm text-gray-600 border-b pb-2">
-              <div className="col-span-1">Nom</div>
-              <div className="col-span-1">Prénom</div>
-              <div className="col-span-1">Poste</div>
-              <div className="col-span-1">Contrat</div>
-              <div className="col-span-1">Salaire/Taux</div>
-              <div className="col-span-1">Heures</div>
-              <div className="col-span-1">CNPS Emp.</div>
-              <div className="col-span-1">CNPS Empl.</div>
-              <div className="col-span-1">Autres</div>
-              <div className="col-span-1">Total</div>
-              <div className="col-span-2">Actions</div>
-            </div>
-            
-            {employees.map((employee) => (
-              <div key={employee.id} className="grid grid-cols-12 gap-2 items-center">
-                <div className="col-span-1">
-                  <Input
-                    value={employee.nom}
-                    onChange={(e) => updateEmployee(employee.id, 'nom', e.target.value)}
-                    placeholder="Nom"
-                    size="sm"
-                  />
-                </div>
-                <div className="col-span-1">
-                  <Input
-                    value={employee.prenom}
-                    onChange={(e) => updateEmployee(employee.id, 'prenom', e.target.value)}
-                    placeholder="Prénom"
-                    size="sm"
-                  />
-                </div>
-                <div className="col-span-1">
-                  <Input
-                    value={employee.poste}
-                    onChange={(e) => updateEmployee(employee.id, 'poste', e.target.value)}
-                    placeholder="Poste"
-                    size="sm"
-                  />
-                </div>
-                <div className="col-span-1">
-                  <Select
-                    value={employee.typeContrat}
-                    onValueChange={(value) => updateEmployee(employee.id, 'typeContrat', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="CDI">CDI</SelectItem>
-                      <SelectItem value="CDD">CDD</SelectItem>
-                      <SelectItem value="Saisonnier">Saisonnier</SelectItem>
-                      <SelectItem value="Consultant">Consultant</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-1">
-                  <Input
-                    type="number"
-                    value={employee.typeContrat === 'Saisonnier' ? employee.tauxHoraire : employee.salaireBrut}
-                    onChange={(e) => updateEmployee(
-                      employee.id, 
-                      employee.typeContrat === 'Saisonnier' ? 'tauxHoraire' : 'salaireBrut', 
-                      Number(e.target.value)
+          <div className="space-y-6">
+            {data.payrollData.employees.map((employee, index) => (
+              <Card key={employee.id} className="border-l-4 border-l-green-500">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <h4 className="font-medium">Employé #{index + 1}</h4>
+                  {data.payrollData.employees.length > 1 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeEmployee(employee.id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-4 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Nom</Label>
+                      <Input
+                        value={employee.nom}
+                        onChange={(e) => updateEmployee(employee.id, 'nom', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Prénom</Label>
+                      <Input
+                        value={employee.prenom}
+                        onChange={(e) => updateEmployee(employee.id, 'prenom', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Poste</Label>
+                      <Select
+                        value={employee.poste}
+                        onValueChange={(value) => updateEmployee(employee.id, 'poste', value)}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Directeur d'exploitation">Directeur d'exploitation</SelectItem>
+                          <SelectItem value="Chef de culture">Chef de culture</SelectItem>
+                          <SelectItem value="Ouvrier agricole">Ouvrier agricole</SelectItem>
+                          <SelectItem value="Tractoriste">Tractoriste</SelectItem>
+                          <SelectItem value="Gardien">Gardien</SelectItem>
+                          <SelectItem value="Magasinier">Magasinier</SelectItem>
+                          <SelectItem value="Autre">Autre</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Type de contrat</Label>
+                      <Select
+                        value={employee.typeContrat}
+                        onValueChange={(value) => updateEmployee(employee.id, 'typeContrat', value as Employee['typeContrat'])}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="CDI">CDI</SelectItem>
+                          <SelectItem value="CDD">CDD</SelectItem>
+                          <SelectItem value="Saisonnier">Saisonnier</SelectItem>
+                          <SelectItem value="Consultant">Consultant</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-4 mt-4">
+                    {employee.typeContrat === 'Saisonnier' ? (
+                      <>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700">Taux horaire (FCFA)</Label>
+                          <Input
+                            type="number"
+                            value={parseFloat(employee.tauxHoraire.toString()) || ''}
+                            onChange={(e) => updateEmployee(employee.id, 'tauxHoraire', parseFloat(e.target.value) || 0)}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700">Heures/mois</Label>
+                          <Input
+                            type="number"
+                            value={parseFloat(employee.heuresParMois.toString()) || ''}
+                            onChange={(e) => updateEmployee(employee.id, 'heuresParMois', parseFloat(e.target.value) || 0)}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700">Salaire calculé</Label>
+                          <Input
+                            type="number"
+                            value={parseFloat(employee.salaireBrut.toString()) || ''}
+                            disabled
+                            className="mt-1 bg-gray-100"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700">Salaire brut mensuel (FCFA)</Label>
+                        <Input
+                          type="number"
+                          step="1000"
+                          value={parseFloat(employee.salaireBrut.toString()) || ''}
+                          onChange={(e) => updateEmployee(employee.id, 'salaireBrut', parseFloat(e.target.value) || 0)}
+                          className="mt-1"
+                        />
+                      </div>
                     )}
-                    placeholder={employee.typeContrat === 'Saisonnier' ? "Taux/h" : "Salaire"}
-                  />
-                </div>
-                <div className="col-span-1">
-                  <Input
-                    type="number"
-                    value={employee.heuresParMois}
-                    onChange={(e) => updateEmployee(employee.id, 'heuresParMois', Number(e.target.value))}
-                    placeholder="173"
-                    disabled={employee.typeContrat !== 'Saisonnier'}
-                  />
-                </div>
-                <div className="col-span-1">
-                  <div className="text-sm text-gray-600">
-                    {formatCurrency(employee.cnpsEmploye)}
                   </div>
-                </div>
-                <div className="col-span-1">
-                  <div className="text-sm text-gray-600">
-                    {formatCurrency(employee.cnpsEmployeur)}
+
+                  {employee.typeContrat !== 'Saisonnier' && (
+                    <div className="grid md:grid-cols-3 gap-4 mt-4">
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700">CNPS Employé (3,2%)</Label>
+                        <Input
+                          type="number"
+                          value={parseFloat(employee.cnpsEmploye.toString()) || ''}
+                          disabled
+                          className="mt-1 bg-gray-100"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700">CNPS Employeur (16,3%)</Label>
+                        <Input
+                          type="number"
+                          value={parseFloat(employee.cnpsEmployeur.toString()) || ''}
+                          disabled
+                          className="mt-1 bg-gray-100"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700">Autres charges (5%)</Label>
+                        <Input
+                          type="number"
+                          value={parseFloat(employee.autresCharges.toString()) || ''}
+                          onChange={(e) => updateEmployee(employee.id, 'autresCharges', parseFloat(e.target.value) || 0)}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-4 pt-4 border-t bg-green-50 p-3 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-green-900">Coût total mensuel employeur :</span>
+                      <span className="font-bold text-green-600">
+                        {formatCurrency(
+                          (parseFloat(employee.salaireBrut.toString()) || 0) + 
+                          (parseFloat(employee.cnpsEmployeur.toString()) || 0) + 
+                          (parseFloat(employee.autresCharges.toString()) || 0)
+                        )}
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className="col-span-1">
-                  <div className="text-sm text-gray-600">
-                    {formatCurrency(employee.autresCharges)}
-                  </div>
-                </div>
-                <div className="col-span-1">
-                  <div className="text-sm font-bold text-blue-600">
-                    {formatCurrency(
-                      (employee.typeContrat === 'Saisonnier' ? 
-                        employee.tauxHoraire * employee.heuresParMois : 
-                        employee.salaireBrut) + 
-                      employee.cnpsEmployeur + 
-                      employee.autresCharges
-                    )}
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeEmployee(employee.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </CardContent>
       </Card>
-
-      {/* Résumé et projections */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card className="bg-gradient-to-br from-green-50 to-white">
-          <CardHeader>
-            <CardTitle className="text-green-900">Résumé Mensuel</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Total salaires bruts :</span>
-                <span className="font-bold text-green-600">{formatCurrency(getTotalMonthlySalary())}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Total charges sociales :</span>
-                <span className="font-bold text-orange-600">{formatCurrency(getTotalMonthlyCharges())}</span>
-              </div>
-              <div className="flex justify-between border-t pt-2">
-                <span className="text-gray-800 font-medium">Coût total mensuel :</span>
-                <span className="font-bold text-purple-600">{formatCurrency(getTotalMonthlyCost())}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-800 font-medium">Coût total annuel :</span>
-                <span className="font-bold text-blue-600">{formatCurrency(getTotalMonthlyCost() * 12)}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-white">
-          <CardHeader>
-            <CardTitle className="text-purple-900">Projections sur 3 ans</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Année 1 :</span>
-                <span className="font-bold text-blue-600">{formatCurrency(getProjectionYear(0))}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Année 2 :</span>
-                <span className="font-bold text-green-600">{formatCurrency(getProjectionYear(1))}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Année 3 :</span>
-                <span className="font-bold text-purple-600">{formatCurrency(getProjectionYear(2))}</span>
-              </div>
-              <div className="mt-4 p-3 bg-amber-100 rounded-lg">
-                <p className="text-sm text-amber-800">
-                  <strong>Note :</strong> Projections basées sur un taux d'inflation de {inflationAnnuelle}% par an
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 };

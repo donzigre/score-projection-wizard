@@ -13,37 +13,51 @@ import { IVORY_COAST_CROPS, AGRICULTURAL_SEASONS, CropType } from '@/config/ivor
 const PrevisionsVentesSection = () => {
   const { data, updateProduct, addProduct, removeProduct } = useFinancialData();
   const [selectedCropType, setSelectedCropType] = useState<CropType | null>(null);
+  const [processingCropAdd, setProcessingCropAdd] = useState<string | null>(null);
 
-  const addPredefinedCrop = (crop: CropType) => {
-    const newProduct = {
-      id: Date.now().toString(),
-      name: crop.name,
-      unitsPerMonth: Math.floor(crop.averageYieldPerHectare / crop.cycleMonths),
-      pricePerUnit: crop.averagePricePerUnit,
-      cogsPerUnit: crop.averageCostPerUnit,
-      cropType: crop.category,
-      unit: crop.unitType,
-      cycleMonths: crop.cycleMonths
-    };
+  const addPredefinedCrop = async (crop: CropType) => {
+    if (processingCropAdd === crop.id) return;
     
-    // Ajouter le produit via le contexte
-    addProduct();
-    // Mettre à jour avec les données de la culture
-    setTimeout(() => {
-      const products = data.products;
-      const lastProduct = products[products.length - 1];
-      if (lastProduct) {
-        updateProduct(lastProduct.id, newProduct);
-      }
-    }, 100);
+    setProcessingCropAdd(crop.id);
+    
+    try {
+      // Ajouter un nouveau produit
+      addProduct();
+      
+      // Attendre que le produit soit ajouté au state
+      setTimeout(() => {
+        const lastProduct = data.products[data.products.length - 1];
+        if (lastProduct) {
+          updateProduct(lastProduct.id, {
+            name: crop.name,
+            unitsPerMonth: Math.floor(crop.averageYieldPerHectare / crop.cycleMonths),
+            pricePerUnit: crop.averagePricePerUnit,
+            cogsPerUnit: crop.averageCostPerUnit,
+            cropType: crop.category,
+            unit: crop.unitType,
+            cycleMonths: crop.cycleMonths
+          });
+        }
+        setProcessingCropAdd(null);
+      }, 100);
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de la culture:', error);
+      setProcessingCropAdd(null);
+    }
+  };
+
+  const handleRemoveProduct = (id: string) => {
+    if (data.products.length > 1) {
+      removeProduct(id);
+    }
   };
 
   const FicheProduit = ({ product }: { product: any }) => {
-    const marge = product.pricePerUnit - product.cogsPerUnit;
-    const chiffreAffaireMensuel = product.unitsPerMonth * product.pricePerUnit;
-    const coutAchatMensuel = product.unitsPerMonth * product.cogsPerUnit;
+    const marge = (product.pricePerUnit || 0) - (product.cogsPerUnit || 0);
+    const chiffreAffaireMensuel = (product.unitsPerMonth || 0) * (product.pricePerUnit || 0);
+    const coutAchatMensuel = (product.unitsPerMonth || 0) * (product.cogsPerUnit || 0);
     const margeMensuelle = chiffreAffaireMensuel - coutAchatMensuel;
-    const tauxMarge = product.pricePerUnit > 0 ? ((marge / product.pricePerUnit) * 100) : 0;
+    const tauxMarge = (product.pricePerUnit || 0) > 0 ? ((marge / (product.pricePerUnit || 1)) * 100) : 0;
 
     return (
       <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-white">
@@ -53,13 +67,13 @@ const PrevisionsVentesSection = () => {
               <Leaf className="h-5 w-5 text-green-600" /> : 
               <Wheat className="h-5 w-5 text-amber-600" />
             }
-            <CardTitle className="text-lg text-green-900">{product.name}</CardTitle>
+            <CardTitle className="text-lg text-green-900">{product.name || 'Nouvelle culture'}</CardTitle>
           </div>
           {data.products.length > 1 && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => removeProduct(product.id)}
+              onClick={() => handleRemoveProduct(product.id)}
               className="text-red-600 hover:text-red-800 hover:bg-red-50"
             >
               <X className="h-4 w-4" />
@@ -70,9 +84,10 @@ const PrevisionsVentesSection = () => {
           <div>
             <Label className="text-sm font-medium text-gray-700">Nom de la Culture</Label>
             <Input
-              value={product.name}
+              value={product.name || ''}
               onChange={(e) => updateProduct(product.id, { name: e.target.value })}
               className="mt-1 bg-green-50 border-green-200 focus:border-green-500"
+              placeholder="Nom de la culture"
             />
           </div>
 
@@ -142,9 +157,9 @@ const PrevisionsVentesSection = () => {
   };
 
   const totalCAMensuel = data.products.reduce((sum, product) => 
-    sum + (product.unitsPerMonth * product.pricePerUnit), 0);
+    sum + ((product.unitsPerMonth || 0) * (product.pricePerUnit || 0)), 0);
   const totalCoutMensuel = data.products.reduce((sum, product) => 
-    sum + (product.unitsPerMonth * product.cogsPerUnit), 0);
+    sum + ((product.unitsPerMonth || 0) * (product.cogsPerUnit || 0)), 0);
   const totalMargeMensuelle = totalCAMensuel - totalCoutMensuel;
 
   return (
@@ -178,7 +193,7 @@ const PrevisionsVentesSection = () => {
                     size="sm"
                     onClick={() => addPredefinedCrop(crop)}
                     className="text-left h-auto p-3 hover:bg-green-50"
-                    disabled={data.products.length >= 8}
+                    disabled={data.products.length >= 8 || processingCropAdd === crop.id}
                   >
                     <div>
                       <div className="font-medium text-green-700">{crop.name}</div>
@@ -205,7 +220,7 @@ const PrevisionsVentesSection = () => {
                     size="sm"
                     onClick={() => addPredefinedCrop(crop)}
                     className="text-left h-auto p-3 hover:bg-amber-50"
-                    disabled={data.products.length >= 8}
+                    disabled={data.products.length >= 8 || processingCropAdd === crop.id}
                   >
                     <div>
                       <div className="font-medium text-amber-700">{crop.name}</div>
