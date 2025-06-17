@@ -2,28 +2,28 @@
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import SetupSection from './sections/SetupSection';
-import StartingPointSection from './sections/StartingPointSection';
-import SalesForecastSection from './sections/SalesForecastSection';
-import PayrollSection from './sections/PayrollSection';
+import ConfigurationSection from './sections/ConfigurationSection';
+import PointDepartSection from './sections/PointDepartSection';
+import PrevisionsVentesSection from './sections/PrevisionsVentesSection';
+import MasseSalarialeSection from './sections/MasseSalarialeSection';
 import { FinancialDataProvider } from '@/contexts/FinancialDataContext';
 
 const FinancialProjections = () => {
-  const [activeTab, setActiveTab] = useState("setup");
+  const [activeTab, setActiveTab] = useState("configuration");
 
   const tabs = [
-    { id: "setup", label: "Setup & Directions", component: SetupSection },
-    { id: "starting-point", label: "Starting Point", component: StartingPointSection },
-    { id: "payroll", label: "Payroll Year 1", component: PayrollSection },
-    { id: "sales-forecast", label: "Sales Forecast Year 1", component: SalesForecastSection },
-    { id: "additional-inputs", label: "Additional Inputs", component: () => <div>Coming Soon</div> },
-    { id: "operating-expenses", label: "Operating Expenses", component: () => <div>Coming Soon</div> },
-    { id: "cash-flow", label: "Cash Flow", component: () => <div>Coming Soon</div> },
-    { id: "income-statement", label: "Income Statement", component: () => <div>Coming Soon</div> },
-    { id: "balance-sheet", label: "Balance Sheet", component: () => <div>Coming Soon</div> },
-    { id: "breakeven", label: "Breakeven Analysis", component: () => <div>Coming Soon</div> },
-    { id: "ratios", label: "Financial Ratios", component: () => <div>Coming Soon</div> },
-    { id: "diagnostics", label: "Diagnostic Tools", component: () => <div>Coming Soon</div> },
+    { id: "configuration", label: "Configuration & Instructions", component: ConfigurationSection },
+    { id: "point-depart", label: "Point de Départ", component: PointDepartSection },
+    { id: "masse-salariale", label: "Masse Salariale Année 1", component: MasseSalarialeSection },
+    { id: "previsions-ventes", label: "Prévisions de Ventes Année 1", component: PrevisionsVentesSection },
+    { id: "parametres-supplementaires", label: "Paramètres Supplémentaires", component: () => <div>Prochainement</div> },
+    { id: "charges-exploitation", label: "Charges d'Exploitation", component: () => <div>Prochainement</div> },
+    { id: "flux-tresorerie", label: "Flux de Trésorerie", component: () => <div>Prochainement</div> },
+    { id: "compte-resultat", label: "Compte de Résultat", component: () => <div>Prochainement</div> },
+    { id: "bilan", label: "Bilan", component: () => <div>Prochainement</div> },
+    { id: "analyse-seuil", label: "Analyse du Seuil de Rentabilité", component: () => <div>Prochainement</div> },
+    { id: "ratios-financiers", label: "Ratios Financiers", component: () => <div>Prochainement</div> },
+    { id: "outils-diagnostic", label: "Outils de Diagnostic", component: () => <div>Prochainement</div> },
   ];
 
   return (
@@ -32,9 +32,9 @@ const FinancialProjections = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="mb-8 text-center">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent mb-2">
-              SCORE Financial Projections Template
+              Modèle de Projections Financières SCORE
             </h1>
-            <p className="text-lg text-gray-600">Comprehensive 3-Year Business Financial Planning Tool</p>
+            <p className="text-lg text-gray-600">Outil complet de planification financière d'entreprise sur 3 ans</p>
           </div>
 
           <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
