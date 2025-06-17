@@ -1,65 +1,28 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Tractor, Building, Car, Shovel } from "lucide-react";
-import { useFinancialData } from '@/contexts/FinancialDataContext';
+import { useFinancialData, FixedAsset, FundingSource, WorkingCapitalItem } from '@/contexts/FinancialDataContext';
 import { formatCurrency } from '@/utils/formatting';
 import { InfoCard } from '@/components/ui/InfoCard';
-
-interface FixedAsset {
-  id: string;
-  category: string;
-  name: string;
-  quantity: number;
-  unitPrice: number;
-  depreciationYears: number;
-  icon: string;
-}
-
-interface FundingSource {
-  id: string;
-  type: string;
-  amount: number;
-  interestRate: number;
-  termYears: number;
-}
-
-interface WorkingCapitalItem {
-  id: string;
-  category: string;
-  amount: number;
-  description: string;
-}
-
-const defaultFixedAssets: FixedAsset[] = [
-  { id: '1', category: 'Terrain', name: 'Terrain agricole', quantity: 1, unitPrice: 2000000, depreciationYears: 0, icon: 'land' },
-  { id: '2', category: 'Équipement', name: 'Tracteur', quantity: 1, unitPrice: 15000000, depreciationYears: 10, icon: 'tractor' },
-  { id: '3', category: 'Équipement', name: 'Système d\'irrigation', quantity: 1, unitPrice: 5000000, depreciationYears: 15, icon: 'irrigation' },
-  { id: '4', category: 'Bâtiment', name: 'Hangar de stockage', quantity: 1, unitPrice: 8000000, depreciationYears: 20, icon: 'building' },
-];
-
-const defaultFundingSources: FundingSource[] = [
-  { id: '1', type: 'Apport personnel', amount: 20000000, interestRate: 0, termYears: 0 },
-  { id: '2', type: 'Prêt bancaire agricole', amount: 15000000, interestRate: 8.5, termYears: 7 },
-];
-
-const defaultWorkingCapital: WorkingCapitalItem[] = [
-  { id: '1', category: 'Semences', amount: 2000000, description: 'Stock initial de semences pour une saison' },
-  { id: '2', category: 'Engrais et intrants', amount: 3000000, description: 'Engrais et produits phytosanitaires' },
-  { id: '3', category: 'Fonds de roulement', amount: 5000000, description: 'Réserve pour charges courantes' },
-  { id: '4', category: 'Réserve climatique', amount: 2000000, description: 'Fonds d\'urgence pour mauvaises récoltes' },
-];
 
 const PointDepartSection = () => {
   const { data, updateFixedAssets, updateFundingSources, updateOperatingCapital } = useFinancialData();
   
-  const [fixedAssets, setFixedAssets] = useState<FixedAsset[]>(data.fixedAssets || defaultFixedAssets);
-  const [fundingSources, setFundingSources] = useState<FundingSource[]>(data.fundingSources || defaultFundingSources);
-  const [workingCapital, setWorkingCapital] = useState<WorkingCapitalItem[]>(data.operatingCapital || defaultWorkingCapital);
+  const [fixedAssets, setFixedAssets] = useState<FixedAsset[]>(data.fixedAssets);
+  const [fundingSources, setFundingSources] = useState<FundingSource[]>(data.fundingSources);
+  const [workingCapital, setWorkingCapital] = useState<WorkingCapitalItem[]>(data.operatingCapital);
+
+  // Sync avec le contexte
+  useEffect(() => {
+    setFixedAssets(data.fixedAssets);
+    setFundingSources(data.fundingSources);
+    setWorkingCapital(data.operatingCapital);
+  }, [data.fixedAssets, data.fundingSources, data.operatingCapital]);
 
   const getIcon = (iconType: string) => {
     switch (iconType) {

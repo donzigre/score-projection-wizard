@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 interface CompanyInfo {
@@ -7,7 +8,58 @@ interface CompanyInfo {
   startingYear: number;
 }
 
-interface FixedAssets {
+// Nouvelles interfaces pour l'agriculture ivoirienne
+interface FixedAsset {
+  id: string;
+  category: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  depreciationYears: number;
+  icon: string;
+}
+
+interface FundingSource {
+  id: string;
+  type: string;
+  amount: number;
+  interestRate: number;
+  termYears: number;
+}
+
+interface WorkingCapitalItem {
+  id: string;
+  category: string;
+  amount: number;
+  description: string;
+}
+
+interface Employee {
+  id: string;
+  nom: string;
+  prenom: string;
+  poste: string;
+  typeContrat: 'CDI' | 'CDD' | 'Saisonnier' | 'Consultant';
+  salaireBrut: number;
+  heuresParMois: number;
+  tauxHoraire: number;
+  cnpsEmploye: number;
+  cnpsEmployeur: number;
+  autresCharges: number;
+}
+
+interface PayrollData {
+  employees: Employee[];
+  chargesSociales: {
+    cnpsEmployeur: number;
+    cnpsEmploye: number;
+    autresTaxes: number;
+  };
+  inflationAnnuelle: number;
+}
+
+// Interfaces originales pour compatibilité
+interface OriginalFixedAssets {
   realEstateLand: number;
   realEstateBuildings: number;
   leaseholdImprovements: number;
@@ -17,7 +69,7 @@ interface FixedAssets {
   other: number;
 }
 
-interface OperatingCapital {
+interface OriginalOperatingCapital {
   preOpeningSalaries: number;
   prepaidInsurance: number;
   inventory: number;
@@ -31,7 +83,7 @@ interface OperatingCapital {
   workingCapital: number;
 }
 
-interface FundingSources {
+interface OriginalFundingSources {
   ownersEquityPercent: number;
   ownersEquityAmount: number;
   outsideInvestorsPercent: number;
@@ -83,9 +135,15 @@ interface OperatingExpense {
 
 interface FinancialData {
   companyInfo: CompanyInfo;
-  fixedAssets: FixedAssets;
-  operatingCapital: OperatingCapital;
-  fundingSources: FundingSources;
+  // Nouvelles structures agricoles
+  fixedAssets: FixedAsset[];
+  operatingCapital: WorkingCapitalItem[];
+  fundingSources: FundingSource[];
+  payrollData: PayrollData;
+  // Structures originales pour compatibilité
+  originalFixedAssets?: OriginalFixedAssets;
+  originalOperatingCapital?: OriginalOperatingCapital;
+  originalFundingSources?: OriginalFundingSources;
   products: Product[];
   additionalParameters?: AdditionalParameters;
   operatingExpenses?: OperatingExpense[];
@@ -94,9 +152,10 @@ interface FinancialData {
 interface FinancialDataContextType {
   data: FinancialData;
   updateCompanyInfo: (info: Partial<CompanyInfo>) => void;
-  updateFixedAssets: (assets: Partial<FixedAssets>) => void;
-  updateOperatingCapital: (capital: Partial<OperatingCapital>) => void;
-  updateFundingSources: (sources: Partial<FundingSources>) => void;
+  updateFixedAssets: (assets: FixedAsset[]) => void;
+  updateOperatingCapital: (capital: WorkingCapitalItem[]) => void;
+  updateFundingSources: (sources: FundingSource[]) => void;
+  updatePayrollData: (payroll: Partial<PayrollData>) => void;
   updateProduct: (id: string, product: Partial<Product>) => void;
   addProduct: () => void;
   removeProduct: (id: string) => void;
@@ -108,6 +167,8 @@ interface FinancialDataContextType {
     totalRequiredFunds: number;
     totalFundingSources: number;
     fundingBalance: number;
+    totalMonthlySalaries: number;
+    totalMonthlyCharges: number;
     monthlyLoanPayments: {
       commercial: number;
       mortgage: number;
@@ -118,6 +179,49 @@ interface FinancialDataContextType {
   };
 }
 
+const defaultFixedAssets: FixedAsset[] = [
+  { id: '1', category: 'Terrain', name: 'Terrain agricole (hectares)', quantity: 1, unitPrice: 2000000, depreciationYears: 0, icon: 'land' },
+  { id: '2', category: 'Équipement', name: 'Tracteur', quantity: 1, unitPrice: 15000000, depreciationYears: 10, icon: 'tractor' },
+  { id: '3', category: 'Équipement', name: 'Système d\'irrigation', quantity: 1, unitPrice: 5000000, depreciationYears: 15, icon: 'irrigation' },
+  { id: '4', category: 'Bâtiment', name: 'Hangar de stockage', quantity: 1, unitPrice: 8000000, depreciationYears: 20, icon: 'building' },
+];
+
+const defaultFundingSources: FundingSource[] = [
+  { id: '1', type: 'Apport personnel', amount: 20000000, interestRate: 0, termYears: 0 },
+  { id: '2', type: 'Prêt bancaire agricole', amount: 15000000, interestRate: 8.5, termYears: 7 },
+];
+
+const defaultWorkingCapital: WorkingCapitalItem[] = [
+  { id: '1', category: 'Semences', amount: 2000000, description: 'Stock initial de semences pour une saison' },
+  { id: '2', category: 'Engrais et intrants', amount: 3000000, description: 'Engrais et produits phytosanitaires' },
+  { id: '3', category: 'Fonds de roulement', amount: 5000000, description: 'Réserve pour charges courantes' },
+  { id: '4', category: 'Réserve climatique', amount: 2000000, description: 'Fonds d\'urgence pour mauvaises récoltes' },
+];
+
+const defaultPayrollData: PayrollData = {
+  employees: [
+    {
+      id: '1',
+      nom: 'KOUAME',
+      prenom: 'Jean',
+      poste: 'Directeur d\'exploitation',
+      typeContrat: 'CDI',
+      salaireBrut: 500000,
+      heuresParMois: 173,
+      tauxHoraire: 0,
+      cnpsEmploye: 16000,
+      cnpsEmployeur: 81500,
+      autresCharges: 25000
+    }
+  ],
+  chargesSociales: {
+    cnpsEmployeur: 16.3,
+    cnpsEmploye: 3.2,
+    autresTaxes: 5.0
+  },
+  inflationAnnuelle: 3.5
+};
+
 const defaultData: FinancialData = {
   companyInfo: {
     preparerName: '',
@@ -125,39 +229,10 @@ const defaultData: FinancialData = {
     startingMonth: 'January',
     startingYear: new Date().getFullYear()
   },
-  fixedAssets: {
-    realEstateLand: 0,
-    realEstateBuildings: 0,
-    leaseholdImprovements: 0,
-    equipment: 0,
-    furnitureFixtures: 0,
-    vehicles: 0,
-    other: 0
-  },
-  operatingCapital: {
-    preOpeningSalaries: 0,
-    prepaidInsurance: 0,
-    inventory: 0,
-    legalAccounting: 0,
-    rentDeposits: 0,
-    utilityDeposits: 0,
-    supplies: 0,
-    advertising: 0,
-    licenses: 0,
-    otherStartupCosts: 0,
-    workingCapital: 0
-  },
-  fundingSources: {
-    ownersEquityPercent: 0,
-    ownersEquityAmount: 0,
-    outsideInvestorsPercent: 0,
-    outsideInvestorsAmount: 0,
-    commercialLoanAmount: 0,
-    commercialMortgageAmount: 0,
-    creditCardDebt: 0,
-    vehicleLoans: 0,
-    otherBankDebt: 0
-  },
+  fixedAssets: defaultFixedAssets,
+  operatingCapital: defaultWorkingCapital,
+  fundingSources: defaultFundingSources,
+  payrollData: defaultPayrollData,
   products: [
     { id: '1', name: 'Product 1', unitsPerMonth: 0, pricePerUnit: 0, cogsPerUnit: 0 }
   ],
@@ -207,24 +282,31 @@ export const FinancialDataProvider: React.FC<{ children: React.ReactNode }> = ({
     }));
   }, []);
 
-  const updateFixedAssets = useCallback((assets: Partial<FixedAssets>) => {
+  const updateFixedAssets = useCallback((assets: FixedAsset[]) => {
     setData(prev => ({
       ...prev,
-      fixedAssets: { ...prev.fixedAssets, ...assets }
+      fixedAssets: assets
     }));
   }, []);
 
-  const updateOperatingCapital = useCallback((capital: Partial<OperatingCapital>) => {
+  const updateOperatingCapital = useCallback((capital: WorkingCapitalItem[]) => {
     setData(prev => ({
       ...prev,
-      operatingCapital: { ...prev.operatingCapital, ...capital }
+      operatingCapital: capital
     }));
   }, []);
 
-  const updateFundingSources = useCallback((sources: Partial<FundingSources>) => {
+  const updateFundingSources = useCallback((sources: FundingSource[]) => {
     setData(prev => ({
       ...prev,
-      fundingSources: { ...prev.fundingSources, ...sources }
+      fundingSources: sources
+    }));
+  }, []);
+
+  const updatePayrollData = useCallback((payroll: Partial<PayrollData>) => {
+    setData(prev => ({
+      ...prev,
+      payrollData: { ...prev.payrollData, ...payroll }
     }));
   }, []);
 
@@ -270,9 +352,20 @@ export const FinancialDataProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   // Calculations
-  const totalFixedAssets = Object.values(data.fixedAssets).reduce((sum, val) => sum + val, 0);
-  const totalOperatingCapital = Object.values(data.operatingCapital).reduce((sum, val) => sum + val, 0);
+  const totalFixedAssets = data.fixedAssets.reduce((total, asset) => total + (asset.quantity * asset.unitPrice), 0);
+  const totalOperatingCapital = data.operatingCapital.reduce((total, item) => total + item.amount, 0);
   const totalRequiredFunds = totalFixedAssets + totalOperatingCapital;
+  const totalFundingSources = data.fundingSources.reduce((total, source) => total + source.amount, 0);
+  const fundingBalance = totalFundingSources - totalRequiredFunds;
+
+  // Payroll calculations
+  const totalMonthlySalaries = data.payrollData.employees.reduce((total, emp) => {
+    return total + (emp.typeContrat === 'Saisonnier' ? emp.tauxHoraire * emp.heuresParMois : emp.salaireBrut);
+  }, 0);
+  
+  const totalMonthlyCharges = data.payrollData.employees.reduce((total, emp) => {
+    return total + emp.cnpsEmployeur + emp.autresCharges;
+  }, 0);
 
   const calculateMonthlyPayment = (principal: number, rate: number, months: number) => {
     if (principal === 0 || rate === 0) return 0;
@@ -281,15 +374,15 @@ export const FinancialDataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const monthlyLoanPayments = {
-    commercial: calculateMonthlyPayment(data.fundingSources.commercialLoanAmount, 9, 84),
-    mortgage: calculateMonthlyPayment(data.fundingSources.commercialMortgageAmount, 9, 240),
-    creditCard: calculateMonthlyPayment(data.fundingSources.creditCardDebt, 7, 60),
-    vehicle: calculateMonthlyPayment(data.fundingSources.vehicleLoans, 6, 48),
-    other: calculateMonthlyPayment(data.fundingSources.otherBankDebt, 5, 36)
+    commercial: data.fundingSources.find(s => s.type.includes('bancaire'))?.amount 
+      ? calculateMonthlyPayment(data.fundingSources.find(s => s.type.includes('bancaire'))!.amount, 
+          data.fundingSources.find(s => s.type.includes('bancaire'))!.interestRate, 
+          data.fundingSources.find(s => s.type.includes('bancaire'))!.termYears * 12) : 0,
+    mortgage: 0,
+    creditCard: 0,
+    vehicle: 0,
+    other: 0
   };
-
-  const totalFundingSources = Object.values(data.fundingSources).reduce((sum, val) => sum + val, 0);
-  const fundingBalance = totalFundingSources - totalRequiredFunds;
 
   const calculations = {
     totalFixedAssets,
@@ -297,6 +390,8 @@ export const FinancialDataProvider: React.FC<{ children: React.ReactNode }> = ({
     totalRequiredFunds,
     totalFundingSources,
     fundingBalance,
+    totalMonthlySalaries,
+    totalMonthlyCharges,
     monthlyLoanPayments
   };
 
@@ -306,6 +401,7 @@ export const FinancialDataProvider: React.FC<{ children: React.ReactNode }> = ({
     updateFixedAssets,
     updateOperatingCapital,
     updateFundingSources,
+    updatePayrollData,
     updateProduct,
     addProduct,
     removeProduct,
@@ -328,3 +424,5 @@ export const useFinancialData = () => {
   }
   return context;
 };
+
+export type { FixedAsset, FundingSource, WorkingCapitalItem, Employee, PayrollData };
