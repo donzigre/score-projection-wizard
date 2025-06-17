@@ -1,302 +1,448 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Trash2, Tractor, Building, Car, Shovel } from "lucide-react";
 import { useFinancialData } from '@/contexts/FinancialDataContext';
 import { formatCurrency } from '@/utils/formatting';
+import { InfoCard } from '@/components/ui/InfoCard';
+
+interface FixedAsset {
+  id: string;
+  category: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  depreciationYears: number;
+  icon: string;
+}
+
+interface FundingSource {
+  id: string;
+  type: string;
+  amount: number;
+  interestRate: number;
+  termYears: number;
+}
+
+interface WorkingCapitalItem {
+  id: string;
+  category: string;
+  amount: number;
+  description: string;
+}
+
+const defaultFixedAssets: FixedAsset[] = [
+  { id: '1', category: 'Terrain', name: 'Terrain agricole', quantity: 1, unitPrice: 2000000, depreciationYears: 0, icon: 'land' },
+  { id: '2', category: 'Équipement', name: 'Tracteur', quantity: 1, unitPrice: 15000000, depreciationYears: 10, icon: 'tractor' },
+  { id: '3', category: 'Équipement', name: 'Système d\'irrigation', quantity: 1, unitPrice: 5000000, depreciationYears: 15, icon: 'irrigation' },
+  { id: '4', category: 'Bâtiment', name: 'Hangar de stockage', quantity: 1, unitPrice: 8000000, depreciationYears: 20, icon: 'building' },
+];
+
+const defaultFundingSources: FundingSource[] = [
+  { id: '1', type: 'Apport personnel', amount: 20000000, interestRate: 0, termYears: 0 },
+  { id: '2', type: 'Prêt bancaire agricole', amount: 15000000, interestRate: 8.5, termYears: 7 },
+];
+
+const defaultWorkingCapital: WorkingCapitalItem[] = [
+  { id: '1', category: 'Semences', amount: 2000000, description: 'Stock initial de semences pour une saison' },
+  { id: '2', category: 'Engrais et intrants', amount: 3000000, description: 'Engrais et produits phytosanitaires' },
+  { id: '3', category: 'Fonds de roulement', amount: 5000000, description: 'Réserve pour charges courantes' },
+  { id: '4', category: 'Réserve climatique', amount: 2000000, description: 'Fonds d\'urgence pour mauvaises récoltes' },
+];
 
 const PointDepartSection = () => {
-  const { data, updateFixedAssets, updateOperatingCapital, updateFundingSources, calculations } = useFinancialData();
+  const { data, updateFixedAssets, updateFundingSources, updateOperatingCapital } = useFinancialData();
+  
+  const [fixedAssets, setFixedAssets] = useState<FixedAsset[]>(data.fixedAssets || defaultFixedAssets);
+  const [fundingSources, setFundingSources] = useState<FundingSource[]>(data.fundingSources || defaultFundingSources);
+  const [workingCapital, setWorkingCapital] = useState<WorkingCapitalItem[]>(data.operatingCapital || defaultWorkingCapital);
 
-  const ChampSaisie = ({ 
-    label, 
-    value, 
-    onChange, 
-    placeholder = "0", 
-    isCalculated = false 
-  }: {
-    label: string;
-    value: number;
-    onChange?: (value: number) => void;
-    placeholder?: string;
-    isCalculated?: boolean;
-  }) => (
-    <div>
-      <Label className="text-sm font-medium text-gray-700">{label}</Label>
-      <Input
-        type="number"
-        value={value || ''}
-        onChange={(e) => onChange?.(parseFloat(e.target.value) || 0)}
-        placeholder={placeholder}
-        disabled={isCalculated}
-        className={`mt-1 ${isCalculated 
-          ? 'bg-gray-100 text-gray-700 font-medium' 
-          : 'bg-blue-50 border-blue-200 focus:border-blue-500'
-        }`}
-      />
-    </div>
-  );
+  const getIcon = (iconType: string) => {
+    switch (iconType) {
+      case 'tractor': return <Tractor className="h-5 w-5" />;
+      case 'building': return <Building className="h-5 w-5" />;
+      case 'car': return <Car className="h-5 w-5" />;
+      default: return <Shovel className="h-5 w-5" />;
+    }
+  };
+
+  const addFixedAsset = () => {
+    const newAsset: FixedAsset = {
+      id: Date.now().toString(),
+      category: 'Équipement',
+      name: 'Nouvel équipement',
+      quantity: 1,
+      unitPrice: 0,
+      depreciationYears: 5,
+      icon: 'equipment'
+    };
+    const updated = [...fixedAssets, newAsset];
+    setFixedAssets(updated);
+    updateFixedAssets(updated);
+  };
+
+  const removeFixedAsset = (id: string) => {
+    const updated = fixedAssets.filter(asset => asset.id !== id);
+    setFixedAssets(updated);
+    updateFixedAssets(updated);
+  };
+
+  const updateFixedAsset = (id: string, field: keyof FixedAsset, value: any) => {
+    const updated = fixedAssets.map(asset => 
+      asset.id === id ? { ...asset, [field]: value } : asset
+    );
+    setFixedAssets(updated);
+    updateFixedAssets(updated);
+  };
+
+  const addFundingSource = () => {
+    const newSource: FundingSource = {
+      id: Date.now().toString(),
+      type: 'Autre financement',
+      amount: 0,
+      interestRate: 0,
+      termYears: 1
+    };
+    const updated = [...fundingSources, newSource];
+    setFundingSources(updated);
+    updateFundingSources(updated);
+  };
+
+  const removeFundingSource = (id: string) => {
+    const updated = fundingSources.filter(source => source.id !== id);
+    setFundingSources(updated);
+    updateFundingSources(updated);
+  };
+
+  const updateFundingSource = (id: string, field: keyof FundingSource, value: any) => {
+    const updated = fundingSources.map(source => 
+      source.id === id ? { ...source, [field]: value } : source
+    );
+    setFundingSources(updated);
+    updateFundingSources(updated);
+  };
+
+  const addWorkingCapitalItem = () => {
+    const newItem: WorkingCapitalItem = {
+      id: Date.now().toString(),
+      category: 'Autre',
+      amount: 0,
+      description: 'Nouvelle charge'
+    };
+    const updated = [...workingCapital, newItem];
+    setWorkingCapital(updated);
+    updateOperatingCapital(updated);
+  };
+
+  const removeWorkingCapitalItem = (id: string) => {
+    const updated = workingCapital.filter(item => item.id !== id);
+    setWorkingCapital(updated);
+    updateOperatingCapital(updated);
+  };
+
+  const updateWorkingCapitalItem = (id: string, field: keyof WorkingCapitalItem, value: any) => {
+    const updated = workingCapital.map(item => 
+      item.id === id ? { ...item, [field]: value } : item
+    );
+    setWorkingCapital(updated);
+    updateOperatingCapital(updated);
+  };
+
+  const getTotalFixedAssets = () => fixedAssets.reduce((total, asset) => total + (asset.quantity * asset.unitPrice), 0);
+  const getTotalFunding = () => fundingSources.reduce((total, source) => total + source.amount, 0);
+  const getTotalWorkingCapital = () => workingCapital.reduce((total, item) => total + item.amount, 0);
 
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Point de Départ - Financement & Actifs</h2>
-        <p className="text-gray-600">Définissez vos besoins en capital initial et sources de financement</p>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">Point de Départ - Agriculture Ivoirienne</h2>
+        <p className="text-gray-600">Configurez vos investissements initiaux et sources de financement pour votre exploitation agricole</p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Immobilisations */}
-        <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-white">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl text-blue-900">Immobilisations</CardTitle>
-            <p className="text-sm text-blue-700">Actifs immobilisés de votre entreprise</p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <ChampSaisie
-              label="Immobilier - Terrain"
-              value={data.fixedAssets.realEstateLand}
-              onChange={(value) => updateFixedAssets({ realEstateLand: value })}
-            />
-            <ChampSaisie
-              label="Immobilier - Bâtiments (amort. 20 ans)"
-              value={data.fixedAssets.realEstateBuildings}
-              onChange={(value) => updateFixedAssets({ realEstateBuildings: value })}
-            />
-            <ChampSaisie
-              label="Aménagements (amort. 7 ans)"
-              value={data.fixedAssets.leaseholdImprovements}
-              onChange={(value) => updateFixedAssets({ leaseholdImprovements: value })}
-            />
-            <ChampSaisie
-              label="Équipements (amort. 7 ans)"
-              value={data.fixedAssets.equipment}
-              onChange={(value) => updateFixedAssets({ equipment: value })}
-            />
-            <ChampSaisie
-              label="Mobilier et Agencements (amort. 5 ans)"
-              value={data.fixedAssets.furnitureFixtures}
-              onChange={(value) => updateFixedAssets({ furnitureFixtures: value })}
-            />
-            <ChampSaisie
-              label="Véhicules (amort. 5 ans)"
-              value={data.fixedAssets.vehicles}
-              onChange={(value) => updateFixedAssets({ vehicles: value })}
-            />
-            <ChampSaisie
-              label="Autres Immobilisations (amort. 5 ans)"
-              value={data.fixedAssets.other}
-              onChange={(value) => updateFixedAssets({ other: value })}
-            />
-            <div className="pt-4 border-t border-blue-200">
-              <ChampSaisie
-                label="Total Immobilisations"
-                value={calculations.totalFixedAssets}
-                isCalculated={true}
-              />
+      <div className="grid md:grid-cols-2 gap-6">
+        <InfoCard 
+          title="Guide des Investissements Agricoles"
+          content={
+            <div className="space-y-3 text-sm text-gray-600">
+              <p><strong>🚜 Équipements :</strong> Tracteurs, outils, systèmes d'irrigation, véhicules</p>
+              <p><strong>🏗️ Infrastructures :</strong> Hangars, serres, clôtures, puits</p>
+              <p><strong>🌱 Fonds de Roulement :</strong> Semences, engrais, main-d'œuvre saisonnière</p>
+              <p><strong>💰 Financement :</strong> Apports personnels, prêts agricoles, subventions</p>
+              <div className="mt-4 p-3 bg-green-100 rounded-lg">
+                <p className="font-medium text-green-900">💡 Conseil :</p>
+                <p className="text-green-800">Prévoyez 20-30% de réserve pour les imprévus climatiques</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          }
+        />
 
-        {/* Fonds de Roulement */}
-        <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-white">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl text-green-900">Fonds de Roulement</CardTitle>
-            <p className="text-sm text-green-700">Fonds de roulement et coûts de démarrage</p>
+        <Card className="bg-gradient-to-br from-blue-50 to-green-50">
+          <CardHeader>
+            <CardTitle className="text-blue-900">Résumé Financier</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <ChampSaisie
-              label="Salaires et Charges d'Ouverture"
-              value={data.operatingCapital.preOpeningSalaries}
-              onChange={(value) => updateOperatingCapital({ preOpeningSalaries: value })}
-            />
-            <ChampSaisie
-              label="Primes d'Assurance Prépayées"
-              value={data.operatingCapital.prepaidInsurance}
-              onChange={(value) => updateOperatingCapital({ prepaidInsurance: value })}
-            />
-            <ChampSaisie
-              label="Stock Initial"
-              value={data.operatingCapital.inventory}
-              onChange={(value) => updateOperatingCapital({ inventory: value })}
-            />
-            <ChampSaisie
-              label="Frais Juridiques et Comptables"
-              value={data.operatingCapital.legalAccounting}
-              onChange={(value) => updateOperatingCapital({ legalAccounting: value })}
-            />
-            <ChampSaisie
-              label="Dépôts de Garantie Loyers"
-              value={data.operatingCapital.rentDeposits}
-              onChange={(value) => updateOperatingCapital({ rentDeposits: value })}
-            />
-            <ChampSaisie
-              label="Dépôts de Garantie Services"
-              value={data.operatingCapital.utilityDeposits}
-              onChange={(value) => updateOperatingCapital({ utilityDeposits: value })}
-            />
-            <ChampSaisie
-              label="Fournitures"
-              value={data.operatingCapital.supplies}
-              onChange={(value) => updateOperatingCapital({ supplies: value })}
-            />
-            <ChampSaisie
-              label="Publicité et Promotion"
-              value={data.operatingCapital.advertising}
-              onChange={(value) => updateOperatingCapital({ advertising: value })}
-            />
-            <ChampSaisie
-              label="Licences et Autorisations"
-              value={data.operatingCapital.licenses}
-              onChange={(value) => updateOperatingCapital({ licenses: value })}
-            />
-            <ChampSaisie
-              label="Autres Frais de Démarrage"
-              value={data.operatingCapital.otherStartupCosts}
-              onChange={(value) => updateOperatingCapital({ otherStartupCosts: value })}
-            />
-            <ChampSaisie
-              label="Trésorerie de Départ"
-              value={data.operatingCapital.workingCapital}
-              onChange={(value) => updateOperatingCapital({ workingCapital: value })}
-            />
-            <div className="pt-4 border-t border-green-200">
-              <ChampSaisie
-                label="Total Fonds de Roulement"
-                value={calculations.totalOperatingCapital}
-                isCalculated={true}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Sources de Financement */}
-        <Card className="shadow-lg border-0 bg-gradient-to-br from-purple-50 to-white">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl text-purple-900">Sources de Financement</CardTitle>
-            <p className="text-sm text-purple-700">Comment financer votre entreprise</p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-2">
-              <ChampSaisie
-                label="Apport Personnel %"
-                value={data.fundingSources.ownersEquityPercent}
-                onChange={(value) => updateFundingSources({ ownersEquityPercent: value })}
-              />
-              <ChampSaisie
-                label="Montant"
-                value={data.fundingSources.ownersEquityAmount}
-                onChange={(value) => updateFundingSources({ ownersEquityAmount: value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <ChampSaisie
-                label="Investisseurs %"
-                value={data.fundingSources.outsideInvestorsPercent}
-                onChange={(value) => updateFundingSources({ outsideInvestorsPercent: value })}
-              />
-              <ChampSaisie
-                label="Montant"
-                value={data.fundingSources.outsideInvestorsAmount}
-                onChange={(value) => updateFundingSources({outsideInvestorsAmount: value })}
-              />
-            </div>
-            <ChampSaisie
-              label="Prêt Bancaire (9%, 84 mois)"
-              value={data.fundingSources.commercialLoanAmount}
-              onChange={(value) => updateFundingSources({ commercialLoanAmount: value })}
-            />
-            <ChampSaisie
-              label="Crédit Immobilier (9%, 240 mois)"
-              value={data.fundingSources.commercialMortgageAmount}
-              onChange={(value) => updateFundingSources({ commercialMortgageAmount: value })}
-            />
-            <ChampSaisie
-              label="Crédit Renouvelable (7%, 60 mois)"
-              value={data.fundingSources.creditCardDebt}
-              onChange={(value) => updateFundingSources({ creditCardDebt: value })}
-            />
-            <ChampSaisie
-              label="Crédit Véhicule (6%, 48 mois)"
-              value={data.fundingSources.vehicleLoans}
-              onChange={(value) => updateFundingSources({ vehicleLoans: value })}
-            />
-            <ChampSaisie
-              label="Autres Crédits (5%, 36 mois)"
-              value={data.fundingSources.otherBankDebt}
-              onChange={(value) => updateFundingSources({ otherBankDebt: value })}
-            />
-            
-            <div className="pt-4 border-t border-purple-200 space-y-2">
-              <ChampSaisie
-                label="Total Sources de Financement"
-                value={calculations.totalFundingSources}
-                isCalculated={true}
-              />
-              <ChampSaisie
-                label="Total Besoins de Financement"
-                value={calculations.totalRequiredFunds}
-                isCalculated={true}
-              />
-              <div className={`p-3 rounded-lg ${
-                Math.abs(calculations.fundingBalance) < 0.01 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'
-              }`}>
-                <p className="font-medium">
-                  Équilibre Financement : {formatCurrency(calculations.fundingBalance)}
-                </p>
-                <p className="text-sm">
-                  {Math.abs(calculations.fundingBalance) < 0.01 
-                    ? '✅ Sources et besoins équilibrés' 
-                    : calculations.fundingBalance > 0 
-                      ? '⚠️ Excédent de financement'
-                      : '❌ Financement insuffisant'
-                  }
-                </p>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Investissements fixes :</span>
+                <span className="font-bold text-blue-600">{formatCurrency(getTotalFixedAssets())}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Fonds de roulement :</span>
+                <span className="font-bold text-green-600">{formatCurrency(getTotalWorkingCapital())}</span>
+              </div>
+              <div className="flex justify-between border-t pt-2">
+                <span className="text-gray-800 font-medium">Total besoins :</span>
+                <span className="font-bold text-purple-600">{formatCurrency(getTotalFixedAssets() + getTotalWorkingCapital())}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-800 font-medium">Total financement :</span>
+                <span className="font-bold text-orange-600">{formatCurrency(getTotalFunding())}</span>
+              </div>
+              <div className="flex justify-between border-t pt-2">
+                <span className={`font-bold ${getTotalFunding() >= (getTotalFixedAssets() + getTotalWorkingCapital()) ? 'text-green-600' : 'text-red-600'}`}>
+                  Solde :
+                </span>
+                <span className={`font-bold ${getTotalFunding() >= (getTotalFixedAssets() + getTotalWorkingCapital()) ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatCurrency(getTotalFunding() - (getTotalFixedAssets() + getTotalWorkingCapital()))}
+                </span>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Résumé des Mensualités */}
-      <Card className="shadow-lg border-0 bg-gradient-to-r from-blue-50 to-purple-50">
-        <CardHeader>
-          <CardTitle className="text-xl text-gray-900">Résumé des Mensualités de Crédit</CardTitle>
+      {/* Immobilisations */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Tractor className="h-5 w-5" />
+            Immobilisations et Équipements Agricoles
+          </CardTitle>
+          <Button onClick={addFixedAsset} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter
+          </Button>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-5 gap-4">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Prêt Bancaire</p>
-              <p className="text-lg font-bold text-blue-900">
-                {formatCurrency(calculations.monthlyLoanPayments.commercial)}
-              </p>
+          <div className="space-y-4">
+            <div className="grid grid-cols-12 gap-4 font-semibold text-sm text-gray-600 border-b pb-2">
+              <div className="col-span-1"></div>
+              <div className="col-span-2">Catégorie</div>
+              <div className="col-span-3">Description</div>
+              <div className="col-span-1">Qté</div>
+              <div className="col-span-2">Prix unitaire</div>
+              <div className="col-span-2">Amortissement</div>
+              <div className="col-span-1">Actions</div>
             </div>
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Crédit Immobilier</p>
-              <p className="text-lg font-bold text-green-900">
-                {formatCurrency(calculations.monthlyLoanPayments.mortgage)}
-              </p>
+            
+            {fixedAssets.map((asset) => (
+              <div key={asset.id} className="grid grid-cols-12 gap-4 items-center">
+                <div className="col-span-1 flex justify-center">
+                  {getIcon(asset.icon)}
+                </div>
+                <div className="col-span-2">
+                  <Select
+                    value={asset.category}
+                    onValueChange={(value) => updateFixedAsset(asset.id, 'category', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Terrain">Terrain</SelectItem>
+                      <SelectItem value="Équipement">Équipement</SelectItem>
+                      <SelectItem value="Bâtiment">Bâtiment</SelectItem>
+                      <SelectItem value="Véhicule">Véhicule</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-3">
+                  <Input
+                    value={asset.name}
+                    onChange={(e) => updateFixedAsset(asset.id, 'name', e.target.value)}
+                    placeholder="Description de l'actif"
+                  />
+                </div>
+                <div className="col-span-1">
+                  <Input
+                    type="number"
+                    value={asset.quantity}
+                    onChange={(e) => updateFixedAsset(asset.id, 'quantity', Number(e.target.value))}
+                    min="1"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Input
+                    type="number"
+                    value={asset.unitPrice}
+                    onChange={(e) => updateFixedAsset(asset.id, 'unitPrice', Number(e.target.value))}
+                    placeholder="Prix en FCFA"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Input
+                    type="number"
+                    value={asset.depreciationYears}
+                    onChange={(e) => updateFixedAsset(asset.id, 'depreciationYears', Number(e.target.value))}
+                    placeholder="Années"
+                    min="0"
+                  />
+                </div>
+                <div className="col-span-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeFixedAsset(asset.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Fonds de Roulement */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Fonds de Roulement et Capital d'Exploitation</CardTitle>
+          <Button onClick={addWorkingCapitalItem} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {workingCapital.map((item) => (
+              <div key={item.id} className="grid grid-cols-12 gap-4 items-center">
+                <div className="col-span-3">
+                  <Select
+                    value={item.category}
+                    onValueChange={(value) => updateWorkingCapitalItem(item.id, 'category', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Semences">Semences</SelectItem>
+                      <SelectItem value="Engrais et intrants">Engrais et intrants</SelectItem>
+                      <SelectItem value="Main-d'œuvre">Main-d'œuvre</SelectItem>
+                      <SelectItem value="Fonds de roulement">Fonds de roulement</SelectItem>
+                      <SelectItem value="Réserve climatique">Réserve climatique</SelectItem>
+                      <SelectItem value="Autre">Autre</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-4">
+                  <Input
+                    value={item.description}
+                    onChange={(e) => updateWorkingCapitalItem(item.id, 'description', e.target.value)}
+                    placeholder="Description"
+                  />
+                </div>
+                <div className="col-span-3">
+                  <Input
+                    type="number"
+                    value={item.amount}
+                    onChange={(e) => updateWorkingCapitalItem(item.id, 'amount', Number(e.target.value))}
+                    placeholder="Montant en FCFA"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeWorkingCapitalItem(item.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sources de Financement */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Sources de Financement</CardTitle>
+          <Button onClick={addFundingSource} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="grid grid-cols-12 gap-4 font-semibold text-sm text-gray-600 border-b pb-2">
+              <div className="col-span-3">Type de financement</div>
+              <div className="col-span-3">Montant</div>
+              <div className="col-span-2">Taux (%)</div>
+              <div className="col-span-2">Durée (ans)</div>
+              <div className="col-span-2">Actions</div>
             </div>
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Crédit Renouvelable</p>
-              <p className="text-lg font-bold text-purple-900">
-                {formatCurrency(calculations.monthlyLoanPayments.creditCard)}
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Crédit Véhicule</p>
-              <p className="text-lg font-bold text-indigo-900">
-                {formatCurrency(calculations.monthlyLoanPayments.vehicle)}
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Autres Crédits</p>
-              <p className="text-lg font-bold text-gray-900">
-                {formatCurrency(calculations.monthlyLoanPayments.other)}
-              </p>
-            </div>
+            
+            {fundingSources.map((source) => (
+              <div key={source.id} className="grid grid-cols-12 gap-4 items-center">
+                <div className="col-span-3">
+                  <Select
+                    value={source.type}
+                    onValueChange={(value) => updateFundingSource(source.id, 'type', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Apport personnel">Apport personnel</SelectItem>
+                      <SelectItem value="Prêt bancaire agricole">Prêt bancaire agricole</SelectItem>
+                      <SelectItem value="Microfinance">Microfinance</SelectItem>
+                      <SelectItem value="Subvention">Subvention</SelectItem>
+                      <SelectItem value="Prêt familial">Prêt familial</SelectItem>
+                      <SelectItem value="Autre">Autre</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-3">
+                  <Input
+                    type="number"
+                    value={source.amount}
+                    onChange={(e) => updateFundingSource(source.id, 'amount', Number(e.target.value))}
+                    placeholder="Montant en FCFA"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={source.interestRate}
+                    onChange={(e) => updateFundingSource(source.id, 'interestRate', Number(e.target.value))}
+                    placeholder="Taux"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Input
+                    type="number"
+                    value={source.termYears}
+                    onChange={(e) => updateFundingSource(source.id, 'termYears', Number(e.target.value))}
+                    placeholder="Années"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeFundingSource(source.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

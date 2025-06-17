@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      financial_projects: {
+        Row: {
+          additional_parameters: Json | null
+          company_info: Json | null
+          created_at: string
+          fixed_assets: Json | null
+          funding_sources: Json | null
+          id: string
+          operating_capital: Json | null
+          operating_expenses: Json | null
+          payroll_data: Json | null
+          products: Json | null
+          project_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          additional_parameters?: Json | null
+          company_info?: Json | null
+          created_at?: string
+          fixed_assets?: Json | null
+          funding_sources?: Json | null
+          id?: string
+          operating_capital?: Json | null
+          operating_expenses?: Json | null
+          payroll_data?: Json | null
+          products?: Json | null
+          project_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          additional_parameters?: Json | null
+          company_info?: Json | null
+          created_at?: string
+          fixed_assets?: Json | null
+          funding_sources?: Json | null
+          id?: string
+          operating_capital?: Json | null
+          operating_expenses?: Json | null
+          payroll_data?: Json | null
+          products?: Json | null
+          project_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
