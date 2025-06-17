@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -6,7 +5,7 @@ import { useFinancialData } from '@/contexts/FinancialDataContext';
 import { formatCurrency, formatPercentage } from '@/utils/formatting';
 
 const CompteResultatSection = () => {
-  const { data } = useFinancialData();
+  const { data, calculations } = useFinancialData();
 
   const calculateIncomeStatement = () => {
     const results = [];
@@ -39,10 +38,10 @@ const CompteResultatSection = () => {
       const payroll = 15000 * 12 * Math.pow(1.03, year - 1);
 
       // Amortissements (5% des immobilisations)
-      const depreciation = data.calculations?.totalFixedAssets * 0.05 || 0;
+      const depreciation = calculations?.totalFixedAssets * 0.05 || 0;
 
       // Intérêts
-      const interests = (data.calculations?.monthlyLoanPayments?.commercial || 0) * 12 * 0.3; // 30% des paiements = intérêts
+      const interests = (calculations?.monthlyLoanPayments?.commercial || 0) * 12 * 0.3; // 30% des paiements = intérêts
 
       const totalOperatingCosts = operatingExpenses + payroll + depreciation + interests;
       const ebitda = grossProfit - operatingExpenses - payroll;
