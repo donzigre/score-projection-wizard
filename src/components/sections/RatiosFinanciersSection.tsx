@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
@@ -64,8 +65,8 @@ const RatiosFinanciersSection = () => {
             <BarChart data={ratios}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
-              <YAxis tickFormatter={(value) => value.toFixed(2)} />
-              <Tooltip formatter={(value) => value.toFixed(2)} />
+              <YAxis tickFormatter={(value) => typeof value === 'number' ? value.toFixed(2) : String(value)} />
+              <Tooltip formatter={(value) => typeof value === 'number' ? value.toFixed(2) : String(value)} />
               <Legend />
               <Bar dataKey="value" fill="#8884d8" name="Ratio" />
               <Line dataKey="target" stroke="red" name="Cible" />
