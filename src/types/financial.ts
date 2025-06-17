@@ -1,4 +1,3 @@
-
 export interface AdditionalParameters {
   paymentTerms: {
     cash: number;
@@ -52,4 +51,20 @@ export interface DiagnosticAlert {
   message: string;
   severity: 'info' | 'warning' | 'error';
   recommendation: string;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  unitsPerMonth: number;
+  pricePerUnit: number;
+  cogsPerUnit: number;
+  cropType?: 'maraichage' | 'vivrier';
+  unit?: string;
+  cycleMonths?: number;
+  periodeRepos?: number;
+  rendementEstime?: number;
+  rendementReel?: number;
+  cropId?: string; // ID de référence vers IVORY_COAST_CROPS
+  parcelleId?: string; // ID de la parcelle assignée
 }
