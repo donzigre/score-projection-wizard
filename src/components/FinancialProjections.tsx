@@ -6,6 +6,14 @@ import ConfigurationSection from './sections/ConfigurationSection';
 import PointDepartSection from './sections/PointDepartSection';
 import PrevisionsVentesSection from './sections/PrevisionsVentesSection';
 import MasseSalarialeSection from './sections/MasseSalarialeSection';
+import ParametresSupplementairesSection from './sections/ParametresSupplementairesSection';
+import ChargesExploitationSection from './sections/ChargesExploitationSection';
+import FluxTresorerieSection from './sections/FluxTresorerieSection';
+import CompteResultatSection from './sections/CompteResultatSection';
+import BilanSection from './sections/BilanSection';
+import AnalyseSeuilRentabiliteSection from './sections/AnalyseSeuilRentabiliteSection';
+import RatiosFinanciersSection from './sections/RatiosFinanciersSection';
+import OutilsDiagnosticSection from './sections/OutilsDiagnosticSection';
 import { FinancialDataProvider } from '@/contexts/FinancialDataContext';
 
 const FinancialProjections = () => {
@@ -16,14 +24,14 @@ const FinancialProjections = () => {
     { id: "point-depart", label: "Point de Départ", component: PointDepartSection },
     { id: "masse-salariale", label: "Masse Salariale Année 1", component: MasseSalarialeSection },
     { id: "previsions-ventes", label: "Prévisions de Ventes Année 1", component: PrevisionsVentesSection },
-    { id: "parametres-supplementaires", label: "Paramètres Supplémentaires", component: () => <div>Prochainement</div> },
-    { id: "charges-exploitation", label: "Charges d'Exploitation", component: () => <div>Prochainement</div> },
-    { id: "flux-tresorerie", label: "Flux de Trésorerie", component: () => <div>Prochainement</div> },
-    { id: "compte-resultat", label: "Compte de Résultat", component: () => <div>Prochainement</div> },
-    { id: "bilan", label: "Bilan", component: () => <div>Prochainement</div> },
-    { id: "analyse-seuil", label: "Analyse du Seuil de Rentabilité", component: () => <div>Prochainement</div> },
-    { id: "ratios-financiers", label: "Ratios Financiers", component: () => <div>Prochainement</div> },
-    { id: "outils-diagnostic", label: "Outils de Diagnostic", component: () => <div>Prochainement</div> },
+    { id: "parametres-supplementaires", label: "Paramètres Supplémentaires", component: ParametresSupplementairesSection },
+    { id: "charges-exploitation", label: "Charges d'Exploitation", component: ChargesExploitationSection },
+    { id: "flux-tresorerie", label: "Flux de Trésorerie", component: FluxTresorerieSection },
+    { id: "compte-resultat", label: "Compte de Résultat", component: CompteResultatSection },
+    { id: "bilan", label: "Bilan", component: BilanSection },
+    { id: "analyse-seuil", label: "Analyse du Seuil de Rentabilité", component: AnalyseSeuilRentabiliteSection },
+    { id: "ratios-financiers", label: "Ratios Financiers", component: RatiosFinanciersSection },
+    { id: "outils-diagnostic", label: "Outils de Diagnostic", component: OutilsDiagnosticSection },
   ];
 
   return (

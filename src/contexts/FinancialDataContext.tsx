@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 interface CompanyInfo {
@@ -52,12 +51,44 @@ interface Product {
   cogsPerUnit: number;
 }
 
+interface AdditionalParameters {
+  paymentTerms: {
+    cash: number;
+    net30: number;
+    net60: number;
+    over60: number;
+  };
+  supplierPaymentTerms: number;
+  creditLine: {
+    amount: number;
+    interestRate: number;
+  };
+  additionalAssets: {
+    year2: number;
+    year3: number;
+  };
+  taxAssumptions: {
+    corporateTaxRate: number;
+    depreciationRate: number;
+  };
+}
+
+interface OperatingExpense {
+  id: string;
+  category: string;
+  monthlyAmount: number;
+  growthRate: number;
+  isAutoCalculated: boolean;
+}
+
 interface FinancialData {
   companyInfo: CompanyInfo;
   fixedAssets: FixedAssets;
   operatingCapital: OperatingCapital;
   fundingSources: FundingSources;
   products: Product[];
+  additionalParameters?: AdditionalParameters;
+  operatingExpenses?: OperatingExpense[];
 }
 
 interface FinancialDataContextType {
@@ -69,6 +100,8 @@ interface FinancialDataContextType {
   updateProduct: (id: string, product: Partial<Product>) => void;
   addProduct: () => void;
   removeProduct: (id: string) => void;
+  updateAdditionalParameters: (params: Partial<AdditionalParameters>) => void;
+  updateOperatingExpenses: (expenses: OperatingExpense[]) => void;
   calculations: {
     totalFixedAssets: number;
     totalOperatingCapital: number;
@@ -127,6 +160,38 @@ const defaultData: FinancialData = {
   },
   products: [
     { id: '1', name: 'Product 1', unitsPerMonth: 0, pricePerUnit: 0, cogsPerUnit: 0 }
+  ],
+  additionalParameters: {
+    paymentTerms: {
+      cash: 40,
+      net30: 40,
+      net60: 15,
+      over60: 5
+    },
+    supplierPaymentTerms: 30,
+    creditLine: {
+      amount: 50000,
+      interestRate: 8.5
+    },
+    additionalAssets: {
+      year2: 0,
+      year3: 0
+    },
+    taxAssumptions: {
+      corporateTaxRate: 28,
+      depreciationRate: 5
+    }
+  },
+  operatingExpenses: [
+    { id: '1', category: 'Publicité et Marketing', monthlyAmount: 2000, growthRate: 5, isAutoCalculated: false },
+    { id: '2', category: 'Transport et Déplacements', monthlyAmount: 800, growthRate: 3, isAutoCalculated: false },
+    { id: '3', category: 'Assurances', monthlyAmount: 600, growthRate: 3, isAutoCalculated: false },
+    { id: '4', category: 'Loyer et Charges Locatives', monthlyAmount: 3000, growthRate: 2, isAutoCalculated: false },
+    { id: '5', category: 'Télécommunications', monthlyAmount: 300, growthRate: 2, isAutoCalculated: false },
+    { id: '6', category: 'Fournitures de Bureau', monthlyAmount: 200, growthRate: 3, isAutoCalculated: false },
+    { id: '7', category: 'Services Professionnels', monthlyAmount: 1500, growthRate: 3, isAutoCalculated: false },
+    { id: '8', category: 'Amortissements', monthlyAmount: 0, growthRate: 0, isAutoCalculated: true },
+    { id: '9', category: 'Intérêts Bancaires', monthlyAmount: 0, growthRate: 0, isAutoCalculated: true },
   ]
 };
 
@@ -190,6 +255,20 @@ export const FinancialDataProvider: React.FC<{ children: React.ReactNode }> = ({
     }));
   }, []);
 
+  const updateAdditionalParameters = useCallback((params: Partial<AdditionalParameters>) => {
+    setData(prev => ({
+      ...prev,
+      additionalParameters: { ...prev.additionalParameters, ...params }
+    }));
+  }, []);
+
+  const updateOperatingExpenses = useCallback((expenses: OperatingExpense[]) => {
+    setData(prev => ({
+      ...prev,
+      operatingExpenses: expenses
+    }));
+  }, []);
+
   // Calculations
   const totalFixedAssets = Object.values(data.fixedAssets).reduce((sum, val) => sum + val, 0);
   const totalOperatingCapital = Object.values(data.operatingCapital).reduce((sum, val) => sum + val, 0);
@@ -230,6 +309,8 @@ export const FinancialDataProvider: React.FC<{ children: React.ReactNode }> = ({
     updateProduct,
     addProduct,
     removeProduct,
+    updateAdditionalParameters,
+    updateOperatingExpenses,
     calculations
   };
 
