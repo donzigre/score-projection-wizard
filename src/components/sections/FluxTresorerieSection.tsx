@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useFinancialData } from '@/contexts/FinancialDataContext';
 import { formatCurrency } from '@/utils/formatting';
+import { convertOperatingCapitalToLegacy } from '@/utils/dataAdapters';
 
 const FluxTresorerieSection = () => {
   const { data, calculations } = useFinancialData();
@@ -11,7 +11,8 @@ const FluxTresorerieSection = () => {
   // Calcul des flux de trésorerie mensuels
   const calculateCashFlow = () => {
     const cashFlowData = [];
-    let cumulativeCash = data.operatingCapital?.workingCapital || 25000;
+    const legacyOperatingCapital = convertOperatingCapitalToLegacy(data.operatingCapital);
+    let cumulativeCash = legacyOperatingCapital.workingCapital || 25000;
     
     for (let month = 1; month <= 36; month++) {
       const year = Math.ceil(month / 12);

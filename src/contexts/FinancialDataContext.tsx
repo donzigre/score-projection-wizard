@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 interface CompanyInfo {
@@ -101,6 +100,9 @@ interface Product {
   unitsPerMonth: number;
   pricePerUnit: number;
   cogsPerUnit: number;
+  cropType?: string;
+  unit?: string;
+  cycleMonths?: number;
 }
 
 interface AdditionalParameters {

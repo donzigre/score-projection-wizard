@@ -1,14 +1,18 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFinancialData } from '@/contexts/FinancialDataContext';
 import { formatCurrency } from '@/utils/formatting';
+import { convertOperatingCapitalToLegacy, convertFundingSourcesToLegacy } from '@/utils/dataAdapters';
 
 const BilanSection = () => {
   const { data, calculations } = useFinancialData();
 
   const calculateBalanceSheet = () => {
     const results = [];
+    
+    // Convert arrays to legacy format for compatibility
+    const legacyOperatingCapital = convertOperatingCapitalToLegacy(data.operatingCapital);
+    const legacyFundingSources = convertFundingSourcesToLegacy(data.fundingSources);
     
     for (let year = 0; year <= 3; year++) {
       // ACTIF
@@ -17,7 +21,7 @@ const BilanSection = () => {
       const netFixedAssets = calculations.totalFixedAssets - accumulatedDepreciation;
       
       // Actif circulant
-      const cash = year === 0 ? (data.operatingCapital?.workingCapital || 25000) : 
+      const cash = year === 0 ? (legacyOperatingCapital.workingCapital || 25000) : 
                    50000 + (year * 30000); // Croissance de trésorerie
       
       const accountsReceivable = year === 0 ? 0 : 
@@ -27,7 +31,7 @@ const BilanSection = () => {
           return total + (monthlyRevenue * 2); // 2 mois de CA en créances
         }, 0) || 0;
       
-      const inventory = year === 0 ? (data.operatingCapital?.inventory || 15000) :
+      const inventory = year === 0 ? (legacyOperatingCapital.inventory || 15000) :
         data.products?.reduce((total, product) => {
           const growthFactor = Math.pow(1.1, year - 1);
           return total + (product.unitsPerMonth * product.cogsPerUnit * growthFactor * 1.5);
@@ -49,11 +53,11 @@ const BilanSection = () => {
       const totalCurrentLiabilities = accountsPayable + accruals + shortTermDebt;
       
       // Dettes à long terme
-      const initialLongTermDebt = calculations.totalFundingSources - data.fundingSources.ownersEquityAmount;
+      const initialLongTermDebt = calculations.totalFundingSources - legacyFundingSources.ownersEquityAmount;
       const longTermDebt = Math.max(0, initialLongTermDebt - (year * 12000)); // Remboursement annuel
       
       // Capitaux propres
-      const initialEquity = data.fundingSources.ownersEquityAmount || 100000;
+      const initialEquity = legacyFundingSources.ownersEquityAmount || 100000;
       
       // Calcul du résultat cumulé
       let cumulativeEarnings = 0;
