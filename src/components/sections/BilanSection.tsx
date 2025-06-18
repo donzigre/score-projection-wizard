@@ -11,7 +11,7 @@ const BilanSection = () => {
     const results = [];
     
     // Convert arrays to legacy format for compatibility
-    const legacyOperatingCapital = convertOperatingCapitalToLegacy(data.operatingCapital);
+    const legacyOperatingCapital = convertOperatingCapitalToLegacy(data.workingCapitalItems);
     const legacyFundingSources = convertFundingSourcesToLegacy(data.fundingSources);
     
     for (let year = 0; year <= 3; year++) {

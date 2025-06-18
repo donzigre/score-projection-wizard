@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,7 +11,7 @@ const StartingPointSection = () => {
 
   // Convertir les données pour la compatibilité
   const legacyFixedAssets = convertFixedAssetsToLegacy(data.fixedAssets);
-  const legacyOperatingCapital = convertOperatingCapitalToLegacy(data.operatingCapital);
+  const legacyOperatingCapital = convertOperatingCapitalToLegacy(data.workingCapitalItems);
   const legacyFundingSources = convertFundingSourcesToLegacy(data.fundingSources);
 
   const InputField = ({ 

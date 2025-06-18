@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
@@ -14,7 +13,7 @@ const FluxTresorerieAgricoleSection = () => {
   // Calcul des flux de trésorerie agricoles par cycles
   const calculateAgriculturalCashFlow = () => {
     const cashFlowData = [];
-    const legacyOperatingCapital = convertOperatingCapitalToLegacy(data.operatingCapital);
+    const legacyOperatingCapital = convertOperatingCapitalToLegacy(data.workingCapitalItems);
     let cumulativeCash = legacyOperatingCapital.workingCapital || 25000;
     
     // Obtenir les produits avec parcelles assignées
