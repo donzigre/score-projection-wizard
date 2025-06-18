@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -39,7 +40,7 @@ const OutilsDiagnosticSection = () => {
 
   const generateDiagnosticAlerts = (): DiagnosticAlert[] => {
     const alerts: DiagnosticAlert[] = [];
-    const legacyOperatingCapital = convertOperatingCapitalToLegacy(data.operatingCapital);
+    const legacyOperatingCapital = convertOperatingCapitalToLegacy(data.workingCapitalItems);
 
     // Analyse de seuil de rentabilité (point mort)
     const fixedCosts = 50000; // Coûts fixes mensuels

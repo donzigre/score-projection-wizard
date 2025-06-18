@@ -11,7 +11,7 @@ const FluxTresorerieSection = () => {
   // Calcul des flux de trésorerie mensuels
   const calculateCashFlow = () => {
     const cashFlowData = [];
-    const legacyOperatingCapital = convertOperatingCapitalToLegacy(data.operatingCapital);
+    const legacyOperatingCapital = convertOperatingCapitalToLegacy(data.workingCapitalItems);
     let cumulativeCash = legacyOperatingCapital.workingCapital || 25000;
     
     for (let month = 1; month <= 36; month++) {
