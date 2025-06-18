@@ -16,6 +16,7 @@ import AnalyseSeuilRentabiliteSection from './sections/AnalyseSeuilRentabiliteSe
 import RatiosFinanciersSection from './sections/RatiosFinanciersSection';
 import OutilsDiagnosticSection from './sections/OutilsDiagnosticSection';
 import GestionParcellesCulturesSection from './sections/GestionParcellesCulturesSection';
+import TestInteractionSection from './sections/TestInteractionSection';
 import { FinancialDataProvider } from '@/contexts/FinancialDataContext';
 import { ParcellesProvider } from '@/contexts/ParcellesContext';
 
@@ -37,6 +38,7 @@ const FinancialProjections = () => {
     { id: "analyse-seuil", label: "Analyse du Seuil de Rentabilité", component: AnalyseSeuilRentabiliteSection },
     { id: "ratios-financiers", label: "Ratios Financiers", component: RatiosFinanciersSection },
     { id: "outils-diagnostic", label: "Outils de Diagnostic", component: OutilsDiagnosticSection },
+    { id: "test-interaction", label: "Test d'Interaction", component: TestInteractionSection },
   ];
 
   return (
