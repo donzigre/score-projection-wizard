@@ -1,9 +1,5 @@
-
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Product } from '@/types/financial';
-import { OperatingCapital } from '@/types/configuration';
-import { OperatingExpense } from '@/types/expenses';
-import { Salary } from '@/types/salary';
 
 // Company Info interface
 export interface CompanyInfo {
@@ -36,18 +32,21 @@ export interface AdditionalParameters {
   };
 }
 
-// Fixed Asset interface
+// Fixed Asset interface - updated with all required properties
 export interface FixedAsset {
   id: string;
   category: string;
   description: string;
+  name: string;
   quantity: number;
   unitPrice: number;
   totalValue: number;
   depreciationRate: number;
+  depreciationYears: number;
+  icon: string;
 }
 
-// Funding Source interface
+// Funding Source interface - updated with required properties
 export interface FundingSource {
   id: string;
   type: string;
@@ -55,6 +54,7 @@ export interface FundingSource {
   amount: number;
   interestRate?: number;
   term?: number;
+  termYears?: number;
 }
 
 // Working Capital Item interface
@@ -63,6 +63,31 @@ export interface WorkingCapitalItem {
   category: string;
   description: string;
   amount: number;
+}
+
+// Operating Capital interface
+export interface OperatingCapital {
+  workingCapital: number;
+  creditLine: number;
+  creditLineInterestRate: number;
+}
+
+// Operating Expense interface
+export interface OperatingExpense {
+  id: string;
+  category: string;
+  description: string;
+  monthlyAmount: number;
+}
+
+// Salary interface
+export interface Salary {
+  id: string;
+  name: string;
+  position: string;
+  monthlySalary: number;
+  monthlyCharges: number;
+  startMonth: number;
 }
 
 // Employee interface with French properties for MasseSalarialeSection
@@ -104,14 +129,20 @@ export interface Calculations {
   totalFixedAssets: number;
   totalLiabilities: number;
   totalFundingSources: number;
+  totalOperatingCapital: number;
+  totalRequiredFunds: number;
+  fundingBalance: number;
   equity: number;
   cashFlow: any[];
   ratios: any[];
   totalMonthlySalaries: number;
   totalMonthlyCharges: number;
-  monthlyLoanPayments?: {
-    commercial?: number;
-    mortgage?: number;
+  monthlyLoanPayments: {
+    commercial: number;
+    mortgage: number;
+    creditCard: number;
+    vehicle: number;
+    other: number;
   };
 }
 
@@ -137,7 +168,7 @@ interface FinancialDataContextType {
   updateFundingSources: (sources: FundingSource[]) => void;
   updateOperatingCapital: (capital: WorkingCapitalItem[]) => void;
   updateOperatingExpenses: (expenses: OperatingExpense[]) => void;
-  updatePayrollData: (payroll: PayrollData) => void;
+  updatePayrollData: (payroll: Partial<PayrollData>) => void;
   calculations: Calculations;
 }
 
@@ -358,15 +389,24 @@ export const FinancialDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const totalMonthlyCharges = calculateTotalCharges();
 
   // Enhanced calculations with all required properties
+  const totalFixedAssets = data.fixedAssets.reduce((acc, asset) => acc + (asset.quantity * asset.unitPrice), 0);
+  const totalFundingSources = data.fundingSources.reduce((acc, source) => acc + source.amount, 0);
+  const totalOperatingCapital = data.workingCapitalItems.reduce((acc, item) => acc + item.amount, 0);
+  const totalRequiredFunds = totalFixedAssets + totalOperatingCapital;
+  const fundingBalance = totalFundingSources - totalRequiredFunds;
+
   const calculations: Calculations = {
     totalRevenue: data.products.reduce((acc, product) => acc + calculateProductRevenue(product.id), 0),
     totalCosts: operatingExpensesTotal + totalPayroll,
     grossProfit: 0,
     netIncome: 0,
-    totalAssets: data.fixedAssets.reduce((acc, asset) => acc + asset.totalValue, 0),
-    totalFixedAssets: data.fixedAssets.reduce((acc, asset) => acc + asset.totalValue, 0),
-    totalLiabilities: data.fundingSources.reduce((acc, source) => acc + source.amount, 0),
-    totalFundingSources: data.fundingSources.reduce((acc, source) => acc + source.amount, 0),
+    totalAssets: totalFixedAssets,
+    totalFixedAssets,
+    totalLiabilities: totalFundingSources,
+    totalFundingSources,
+    totalOperatingCapital,
+    totalRequiredFunds,
+    fundingBalance,
     equity: 0,
     cashFlow: [],
     ratios: [],
@@ -374,7 +414,10 @@ export const FinancialDataProvider: React.FC<{ children: React.ReactNode }> = ({
     totalMonthlyCharges,
     monthlyLoanPayments: {
       commercial: 0,
-      mortgage: 0
+      mortgage: 0,
+      creditCard: 0,
+      vehicle: 0,
+      other: 0
     }
   };
 
