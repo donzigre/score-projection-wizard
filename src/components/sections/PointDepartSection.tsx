@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,14 +14,14 @@ const PointDepartSection = () => {
   
   const [fixedAssets, setFixedAssets] = useState<FixedAsset[]>(data.fixedAssets);
   const [fundingSources, setFundingSources] = useState<FundingSource[]>(data.fundingSources);
-  const [workingCapital, setWorkingCapital] = useState<WorkingCapitalItem[]>(data.operatingCapital);
+  const [workingCapital, setWorkingCapital] = useState<WorkingCapitalItem[]>(data.workingCapitalItems);
 
   // Sync avec le contexte
   useEffect(() => {
     setFixedAssets(data.fixedAssets);
     setFundingSources(data.fundingSources);
-    setWorkingCapital(data.operatingCapital);
-  }, [data.fixedAssets, data.fundingSources, data.operatingCapital]);
+    setWorkingCapital(data.workingCapitalItems);
+  }, [data.fixedAssets, data.fundingSources, data.workingCapitalItems]);
 
   const getIcon = (iconType: string) => {
     switch (iconType) {
@@ -37,9 +36,12 @@ const PointDepartSection = () => {
     const newAsset: FixedAsset = {
       id: Date.now().toString(),
       category: 'Équipement',
+      description: 'Nouvel équipement agricole',
       name: 'Nouvel équipement',
       quantity: 1,
       unitPrice: 0,
+      totalValue: 0,
+      depreciationRate: 20,
       depreciationYears: 5,
       icon: 'equipment'
     };
@@ -66,6 +68,7 @@ const PointDepartSection = () => {
     const newSource: FundingSource = {
       id: Date.now().toString(),
       type: 'Autre financement',
+      description: 'Source de financement personnalisée',
       amount: 0,
       interestRate: 0,
       termYears: 1
@@ -93,8 +96,8 @@ const PointDepartSection = () => {
     const newItem: WorkingCapitalItem = {
       id: Date.now().toString(),
       category: 'Autre',
-      amount: 0,
-      description: 'Nouvelle charge'
+      description: 'Nouvelle charge',
+      amount: 0
     };
     const updated = [...workingCapital, newItem];
     setWorkingCapital(updated);

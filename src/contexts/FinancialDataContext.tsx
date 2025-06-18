@@ -72,12 +72,14 @@ export interface OperatingCapital {
   creditLineInterestRate: number;
 }
 
-// Operating Expense interface
+// Operating Expense interface - updated with all required properties
 export interface OperatingExpense {
   id: string;
   category: string;
   description: string;
   monthlyAmount: number;
+  growthRate: number;
+  isAutoCalculated: boolean;
 }
 
 // Salary interface
