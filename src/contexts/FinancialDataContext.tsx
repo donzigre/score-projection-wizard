@@ -65,14 +65,25 @@ export interface WorkingCapitalItem {
   amount: number;
 }
 
-// Employee interface
+// Employee interface with French properties for MasseSalarialeSection
 export interface Employee {
   id: string;
-  name: string;
-  position: string;
-  monthlySalary: number;
-  monthlyCharges: number;
-  startMonth: number;
+  nom: string;
+  prenom: string;
+  poste: string;
+  typeContrat: 'CDI' | 'CDD' | 'Saisonnier' | 'Consultant';
+  salaireBrut: number;
+  heuresParMois: number;
+  tauxHoraire: number;
+  cnpsEmploye: number;
+  cnpsEmployeur: number;
+  autresCharges: number;
+  // Legacy properties for backwards compatibility
+  name?: string;
+  position?: string;
+  monthlySalary?: number;
+  monthlyCharges?: number;
+  startMonth?: number;
 }
 
 // Payroll Data interface
@@ -83,17 +94,25 @@ export interface PayrollData {
   totalPayroll: number;
 }
 
-// Calculations interface
+// Calculations interface with all required properties
 export interface Calculations {
   totalRevenue: number;
   totalCosts: number;
   grossProfit: number;
   netIncome: number;
   totalAssets: number;
+  totalFixedAssets: number;
   totalLiabilities: number;
+  totalFundingSources: number;
   equity: number;
   cashFlow: any[];
   ratios: any[];
+  totalMonthlySalaries: number;
+  totalMonthlyCharges: number;
+  monthlyLoanPayments?: {
+    commercial?: number;
+    mortgage?: number;
+  };
 }
 
 interface FinancialDataContextType {
@@ -239,8 +258,31 @@ export const FinancialDataProvider: React.FC<{ children: React.ReactNode }> = ({
     setData(prev => ({ ...prev, operatingExpenses: expenses }));
   }, []);
 
-  const updatePayrollData = useCallback((payroll: PayrollData) => {
-    setData(prev => ({ ...prev, payrollData: payroll }));
+  const updatePayrollData = useCallback((payroll: Partial<PayrollData>) => {
+    setData(prev => {
+      const updatedEmployees = payroll.employees || prev.payrollData.employees;
+      
+      // Calculate totals when updating
+      const totalMonthlySalaries = updatedEmployees.reduce((total, emp) => {
+        return total + (parseFloat(emp.salaireBrut.toString()) || 0);
+      }, 0);
+      
+      const totalMonthlyCharges = updatedEmployees.reduce((total, emp) => {
+        return total + (parseFloat(emp.cnpsEmployeur.toString()) || 0) + (parseFloat(emp.autresCharges.toString()) || 0);
+      }, 0);
+      
+      const totalPayroll = totalMonthlySalaries + totalMonthlyCharges;
+      
+      return {
+        ...prev,
+        payrollData: {
+          employees: updatedEmployees,
+          totalMonthlySalaries,
+          totalMonthlyCharges,
+          totalPayroll
+        }
+      };
+    });
   }, []);
 
   const updateProduct = useCallback((id: string, updates: Partial<Product>) => {
@@ -302,28 +344,38 @@ export const FinancialDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const operatingExpensesTotal = data.operatingExpenses.reduce((acc, expense) => acc + expense.monthlyAmount, 0);
 
   const calculateTotalSalaries = useCallback(() => {
-    return data.salaries.reduce((acc, salary) => acc + salary.monthlySalary, 0);
-  }, [data.salaries]);
+    return data.payrollData.employees.reduce((acc, emp) => acc + (parseFloat(emp.salaireBrut.toString()) || 0), 0);
+  }, [data.payrollData.employees]);
 
   const calculateTotalCharges = useCallback(() => {
-    return data.salaries.reduce((acc, salary) => acc + salary.monthlyCharges, 0);
-  }, [data.salaries]);
+    return data.payrollData.employees.reduce((acc, emp) => {
+      return acc + (parseFloat(emp.cnpsEmployeur.toString()) || 0) + (parseFloat(emp.autresCharges.toString()) || 0);
+    }, 0);
+  }, [data.payrollData.employees]);
 
   const totalPayroll = calculateTotalSalaries() + calculateTotalCharges();
   const totalMonthlySalaries = calculateTotalSalaries();
   const totalMonthlyCharges = calculateTotalCharges();
 
-  // Mock calculations for now - components expect this
+  // Enhanced calculations with all required properties
   const calculations: Calculations = {
     totalRevenue: data.products.reduce((acc, product) => acc + calculateProductRevenue(product.id), 0),
     totalCosts: operatingExpensesTotal + totalPayroll,
     grossProfit: 0,
     netIncome: 0,
     totalAssets: data.fixedAssets.reduce((acc, asset) => acc + asset.totalValue, 0),
+    totalFixedAssets: data.fixedAssets.reduce((acc, asset) => acc + asset.totalValue, 0),
     totalLiabilities: data.fundingSources.reduce((acc, source) => acc + source.amount, 0),
+    totalFundingSources: data.fundingSources.reduce((acc, source) => acc + source.amount, 0),
     equity: 0,
     cashFlow: [],
-    ratios: []
+    ratios: [],
+    totalMonthlySalaries,
+    totalMonthlyCharges,
+    monthlyLoanPayments: {
+      commercial: 0,
+      mortgage: 0
+    }
   };
 
   const value: FinancialDataContextType = {
