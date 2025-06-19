@@ -4,10 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFinancialData } from '@/contexts/FinancialDataContext';
 import { formatCurrency } from '@/utils/formatting';
-import { Plus, Check, X } from 'lucide-react';
+import { Plus, Check, X, AlertCircle } from 'lucide-react';
 
 const TestInteractionSection = () => {
   const { 
@@ -45,12 +44,47 @@ const TestInteractionSection = () => {
     );
   };
 
+  const EmptyStateIndicator = ({ isEmpty, label }: { isEmpty: boolean, label: string }) => (
+    <div className={`flex items-center space-x-2 ${isEmpty ? 'text-orange-600' : 'text-green-600'}`}>
+      {isEmpty ? <AlertCircle className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+      <span className="text-sm">{isEmpty ? `${label} - État vide (normal)` : `${label} - Contient des données`}</span>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Test d'Interaction des Composants</h2>
-        <p className="text-gray-600">Vérification du fonctionnement de tous les champs et boutons</p>
+        <p className="text-gray-600">Vérification du fonctionnement de tous les champs et état initial vide</p>
       </div>
+
+      {/* État Initial */}
+      <Card className="bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200">
+        <CardHeader>
+          <CardTitle className="text-orange-800">État Initial des Données</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <EmptyStateIndicator isEmpty={data.products.length === 0} label="Produits" />
+              <EmptyStateIndicator isEmpty={data.payrollData.employees.length === 0} label="Employés" />
+              <EmptyStateIndicator isEmpty={data.operatingExpenses.length === 0} label="Charges d'exploitation" />
+              <EmptyStateIndicator isEmpty={data.fixedAssets.length === 0} label="Immobilisations" />
+            </div>
+            <div className="space-y-2">
+              <EmptyStateIndicator isEmpty={data.fundingSources.length === 0} label="Sources de financement" />
+              <EmptyStateIndicator isEmpty={data.workingCapitalItems.length === 0} label="Capital de travail" />
+              <EmptyStateIndicator isEmpty={!data.companyInfo.companyName} label="Nom d'entreprise" />
+              <EmptyStateIndicator isEmpty={data.operatingCapital.workingCapital === 0} label="Capital opérationnel" />
+            </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-orange-100 rounded-lg">
+            <p className="text-orange-800 font-medium">✅ Bon : L'application démarre avec des données vides</p>
+            <p className="text-orange-700 text-sm mt-1">Ceci est l'état normal - commencez par saisir les informations de votre entreprise dans l'onglet "Configuration"</p>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Test Informations Entreprise */}
@@ -64,7 +98,7 @@ const TestInteractionSection = () => {
           <CardContent className="space-y-4">
             <div>
               <Label>Nom de l'entreprise actuel:</Label>
-              <p className="text-sm text-gray-600">{data.companyInfo.companyName || 'Non défini'}</p>
+              <p className="text-sm text-gray-600">{data.companyInfo.companyName || 'Vide (normal au démarrage)'}</p>
             </div>
             <div>
               <Label htmlFor="test-company">Nouveau nom d'entreprise:</Label>
@@ -72,7 +106,7 @@ const TestInteractionSection = () => {
                 id="test-company"
                 value={testValue}
                 onChange={(e) => setTestValue(e.target.value)}
-                placeholder="Entrez un nom de test"
+                placeholder="Ex: Ma Ferme SARL"
               />
             </div>
             <Button 
@@ -98,7 +132,7 @@ const TestInteractionSection = () => {
           <CardContent className="space-y-4">
             <div>
               <Label>Nombre de produits actuels:</Label>
-              <p className="text-sm text-gray-600">{data.products.length}</p>
+              <p className="text-sm text-gray-600">{data.products.length} (vide au démarrage)</p>
             </div>
             <div className="flex space-x-2">
               <Button 
@@ -108,9 +142,9 @@ const TestInteractionSection = () => {
                 size="sm"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Ajouter Produit
+                Ajouter Premier Produit
               </Button>
-              {data.products.length > 1 && (
+              {data.products.length > 0 && (
                 <Button 
                   variant="outline"
                   onClick={() => runTest('products', () => {
@@ -129,7 +163,7 @@ const TestInteractionSection = () => {
                   id="test-product-name"
                   value={testValue}
                   onChange={(e) => setTestValue(e.target.value)}
-                  placeholder="Nouveau nom"
+                  placeholder="Ex: Tomates"
                 />
                 <Button 
                   className="mt-2"
@@ -158,26 +192,26 @@ const TestInteractionSection = () => {
           <CardContent className="space-y-4">
             <div>
               <Label>Nombre d'employés actuels:</Label>
-              <p className="text-sm text-gray-600">{data.payrollData.employees.length}</p>
+              <p className="text-sm text-gray-600">{data.payrollData.employees.length} (vide au démarrage)</p>
             </div>
             <div>
               <Label>Total salaires mensuels:</Label>
-              <p className="text-sm text-gray-600">{formatCurrency(data.payrollData.totalMonthlySalaries)}</p>
+              <p className="text-sm text-gray-600">{formatCurrency(data.payrollData.totalMonthlySalaries)} (0 au démarrage)</p>
             </div>
             <Button 
               onClick={() => runTest('payroll', () => {
                 const newEmployee = {
                   id: Date.now().toString(),
-                  nom: 'Test',
-                  prenom: 'Employé',
-                  poste: 'Testeur',
+                  nom: 'Kouadio',
+                  prenom: 'Jean',
+                  poste: 'Ouvrier Agricole',
                   typeContrat: 'CDI' as const,
-                  salaireBrut: 30000,
+                  salaireBrut: 150000, // 150,000 FCFA
                   heuresParMois: 160,
-                  tauxHoraire: 187.5,
-                  cnpsEmploye: 2400,
-                  cnpsEmployeur: 4800,
-                  autresCharges: 1000
+                  tauxHoraire: 937.5,
+                  cnpsEmploye: 12000,
+                  cnpsEmployeur: 24000,
+                  autresCharges: 5000
                 };
                 updatePayrollData({ 
                   employees: [...data.payrollData.employees, newEmployee] 
@@ -201,16 +235,16 @@ const TestInteractionSection = () => {
           <CardContent className="space-y-4">
             <div>
               <Label>Nombre de charges actuelles:</Label>
-              <p className="text-sm text-gray-600">{data.operatingExpenses.length}</p>
+              <p className="text-sm text-gray-600">{data.operatingExpenses.length} (vide au démarrage)</p>
             </div>
             <Button 
               onClick={() => runTest('expenses', () => {
                 const newExpense = {
                   id: Date.now().toString(),
-                  category: 'Charge Test',
-                  description: 'Charge de test ajoutée automatiquement',
-                  monthlyAmount: 1000,
-                  growthRate: 3,
+                  category: 'Carburant',
+                  description: 'Essence pour tracteur et véhicules',
+                  monthlyAmount: 50000, // 50,000 FCFA
+                  growthRate: 5,
                   isAutoCalculated: false
                 };
                 updateOperatingExpenses([...data.operatingExpenses, newExpense]);
@@ -226,46 +260,53 @@ const TestInteractionSection = () => {
       {/* Résumé des Tests */}
       <Card className="bg-gradient-to-r from-blue-50 to-green-50">
         <CardHeader>
-          <CardTitle>Résumé des Tests</CardTitle>
+          <CardTitle>Guide d'Utilisation</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="font-semibold text-green-800 mb-2">Tests Réussis:</h4>
-              <div className="space-y-1">
-                {Object.entries(testResults)
-                  .filter(([_, result]) => result)
-                  .map(([test, _]) => (
-                    <div key={test} className="flex items-center space-x-2 text-green-600">
-                      <Check className="h-4 w-4" />
-                      <span className="text-sm capitalize">{test}</span>
-                    </div>
-                  ))}
-              </div>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-100 rounded-lg">
+              <p className="text-blue-800 font-medium">📋 Ordre recommandé de saisie :</p>
+              <ol className="text-blue-700 text-sm mt-2 space-y-1 list-decimal list-inside">
+                <li>Configuration : Nom d'entreprise, dates de démarrage</li>
+                <li>Point de Départ : Immobilisations et sources de financement</li>
+                <li>Gestion Parcelles : Définir vos parcelles et cultures</li>
+                <li>Masse Salariale : Ajouter vos employés</li>
+                <li>Prévisions de Ventes : Créer vos produits et prix</li>
+                <li>Charges d'Exploitation : Définir vos coûts mensuels</li>
+                <li>Vérifier les rapports financiers générés automatiquement</li>
+              </ol>
             </div>
-            <div>
-              <h4 className="font-semibold text-red-800 mb-2">Tests Échoués:</h4>
-              <div className="space-y-1">
-                {Object.entries(testResults)
-                  .filter(([_, result]) => !result)
-                  .map(([test, _]) => (
-                    <div key={test} className="flex items-center space-x-2 text-red-600">
-                      <X className="h-4 w-4" />
-                      <span className="text-sm capitalize">{test}</span>
-                    </div>
-                  ))}
+            
+            {Object.keys(testResults).length > 0 && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold text-green-800 mb-2">Tests Réussis:</h4>
+                  <div className="space-y-1">
+                    {Object.entries(testResults)
+                      .filter(([_, result]) => result)
+                      .map(([test, _]) => (
+                        <div key={test} className="flex items-center space-x-2 text-green-600">
+                          <Check className="h-4 w-4" />
+                          <span className="text-sm capitalize">{test}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-red-800 mb-2">Tests Échoués:</h4>
+                  <div className="space-y-1">
+                    {Object.entries(testResults)
+                      .filter(([_, result]) => !result)
+                      .map(([test, _]) => (
+                        <div key={test} className="flex items-center space-x-2 text-red-600">
+                          <X className="h-4 w-4" />
+                          <span className="text-sm capitalize">{test}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          
-          <div className="mt-4 p-4 bg-blue-100 rounded-lg">
-            <p className="text-blue-800 font-medium">💡 Instructions de Test:</p>
-            <ol className="text-blue-700 text-sm mt-2 space-y-1">
-              <li>1. Testez chaque section en cliquant sur les boutons correspondants</li>
-              <li>2. Vérifiez que les modifications s'affichent correctement</li>
-              <li>3. Naviguez entre les onglets pour confirmer la persistance des données</li>
-              <li>4. Les tests automatiques vérifient le fonctionnement des composants</li>
-            </ol>
+            )}
           </div>
         </CardContent>
       </Card>

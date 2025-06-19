@@ -190,28 +190,14 @@ interface FinancialData {
 }
 
 const initialData: FinancialData = {
-  products: [{
-    id: 'default-product',
-    name: 'Default Culture',
-    unitsPerMonth: 100,
-    pricePerUnit: 500000,
-    cogsPerUnit: 250000,
-    cropType: 'maraichage',
-    unit: 'kg',
-    cycleMonths: 3,
-    periodeRepos: 0,
-    rendementEstime: 0,
-    rendementReel: 0,
-    cropId: '',
-    parcelleId: ''
-  }],
+  products: [], // Vide par défaut
   salaries: [],
   operatingCapital: {
-    workingCapital: 25000,
-    creditLine: 50000,
-    creditLineInterestRate: 12,
+    workingCapital: 0, // Zéro par défaut
+    creditLine: 0, // Zéro par défaut
+    creditLineInterestRate: 0, // Zéro par défaut
   },
-  operatingExpenses: [],
+  operatingExpenses: [], // Vide par défaut
   
   // Initialize missing properties
   companyInfo: {
@@ -222,30 +208,30 @@ const initialData: FinancialData = {
   },
   additionalParameters: {
     paymentTerms: {
-      cash: 30,
-      net30: 40,
-      net60: 20,
-      over60: 10
+      cash: 0, // Zéro par défaut
+      net30: 0, // Zéro par défaut
+      net60: 0, // Zéro par défaut
+      over60: 0 // Zéro par défaut
     },
-    supplierPaymentTerms: 30,
+    supplierPaymentTerms: 0, // Zéro par défaut
     creditLine: {
-      amount: 50000,
-      interestRate: 12
+      amount: 0, // Zéro par défaut
+      interestRate: 0 // Zéro par défaut
     },
     additionalAssets: {
       year2: 0,
       year3: 0
     },
     taxAssumptions: {
-      corporateTaxRate: 25,
-      depreciationRate: 20
+      corporateTaxRate: 0, // Zéro par défaut
+      depreciationRate: 0 // Zéro par défaut
     }
   },
-  fixedAssets: [],
-  fundingSources: [],
-  workingCapitalItems: [],
+  fixedAssets: [], // Vide par défaut
+  fundingSources: [], // Vide par défaut
+  workingCapitalItems: [], // Vide par défaut
   payrollData: {
-    employees: [],
+    employees: [], // Vide par défaut
     totalMonthlySalaries: 0,
     totalMonthlyCharges: 0,
     totalPayroll: 0
