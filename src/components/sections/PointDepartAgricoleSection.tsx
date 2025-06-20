@@ -106,7 +106,11 @@ const PointDepartAgricoleSection = () => {
   };
 
   const getAvailableCrops = useCallback(() => {
-    return getAllCrops();
+    const crops = getAllCrops();
+    // Filter out any crops with empty, null, or undefined IDs to prevent Select errors
+    const validCrops = crops.filter(crop => crop && crop.id && crop.id.trim() !== '');
+    console.log('Available crops:', validCrops);
+    return validCrops;
   }, [getAllCrops]);
 
   // Utiliser les métriques du contexte au lieu de calculer ici
@@ -257,9 +261,16 @@ const PointDepartAgricoleSection = () => {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="no-culture">Aucune culture</SelectItem>
-                            {getAvailableCrops().map((crop) => (
-                              <SelectItem key={crop.id} value={crop.id}>{crop.name}</SelectItem>
-                            ))}
+                            {getAvailableCrops().map((crop) => {
+                              // Additional safety check before rendering
+                              if (!crop || !crop.id || crop.id.trim() === '') {
+                                console.warn('Invalid crop found:', crop);
+                                return null;
+                              }
+                              return (
+                                <SelectItem key={crop.id} value={crop.id}>{crop.name}</SelectItem>
+                              );
+                            })}
                           </SelectContent>
                         </Select>
                       </div>
