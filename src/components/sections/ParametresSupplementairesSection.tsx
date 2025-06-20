@@ -28,13 +28,14 @@ const ParametresSupplementairesSection = () => {
               <Input
                 id="cash"
                 type="number"
-                value={data.additionalParameters?.paymentTerms.cash || 40}
+                value={data.additionalParameters?.paymentTerms.cash || ''}
                 onChange={(e) => updateAdditionalParameters({
                   paymentTerms: {
                     ...data.additionalParameters?.paymentTerms,
                     cash: Number(e.target.value)
                   }
                 })}
+                placeholder="0"
               />
             </div>
             <div>
@@ -42,13 +43,14 @@ const ParametresSupplementairesSection = () => {
               <Input
                 id="net30"
                 type="number"
-                value={data.additionalParameters?.paymentTerms.net30 || 40}
+                value={data.additionalParameters?.paymentTerms.net30 || ''}
                 onChange={(e) => updateAdditionalParameters({
                   paymentTerms: {
                     ...data.additionalParameters?.paymentTerms,
                     net30: Number(e.target.value)
                   }
                 })}
+                placeholder="0"
               />
             </div>
             <div>
@@ -56,13 +58,14 @@ const ParametresSupplementairesSection = () => {
               <Input
                 id="net60"
                 type="number"
-                value={data.additionalParameters?.paymentTerms.net60 || 15}
+                value={data.additionalParameters?.paymentTerms.net60 || ''}
                 onChange={(e) => updateAdditionalParameters({
                   paymentTerms: {
                     ...data.additionalParameters?.paymentTerms,
                     net60: Number(e.target.value)
                   }
                 })}
+                placeholder="0"
               />
             </div>
             <div>
@@ -70,13 +73,14 @@ const ParametresSupplementairesSection = () => {
               <Input
                 id="over60"
                 type="number"
-                value={data.additionalParameters?.paymentTerms.over60 || 5}
+                value={data.additionalParameters?.paymentTerms.over60 || ''}
                 onChange={(e) => updateAdditionalParameters({
                   paymentTerms: {
                     ...data.additionalParameters?.paymentTerms,
                     over60: Number(e.target.value)
                   }
                 })}
+                placeholder="0"
               />
             </div>
           </CardContent>
@@ -92,13 +96,14 @@ const ParametresSupplementairesSection = () => {
               <Input
                 id="creditAmount"
                 type="number"
-                value={data.additionalParameters?.creditLine.amount || 50000}
+                value={data.additionalParameters?.creditLine.amount || ''}
                 onChange={(e) => updateAdditionalParameters({
                   creditLine: {
                     ...data.additionalParameters?.creditLine,
                     amount: Number(e.target.value)
                   }
                 })}
+                placeholder="0"
               />
             </div>
             <div>
@@ -107,13 +112,14 @@ const ParametresSupplementairesSection = () => {
                 id="creditRate"
                 type="number"
                 step="0.1"
-                value={data.additionalParameters?.creditLine.interestRate || 8.5}
+                value={data.additionalParameters?.creditLine.interestRate || ''}
                 onChange={(e) => updateAdditionalParameters({
                   creditLine: {
                     ...data.additionalParameters?.creditLine,
                     interestRate: Number(e.target.value)
                   }
                 })}
+                placeholder="0.0"
               />
             </div>
             <div>
@@ -122,13 +128,14 @@ const ParametresSupplementairesSection = () => {
                 id="taxRate"
                 type="number"
                 step="0.1"
-                value={data.additionalParameters?.taxAssumptions.corporateTaxRate || 28}
+                value={data.additionalParameters?.taxAssumptions.corporateTaxRate || ''}
                 onChange={(e) => updateAdditionalParameters({
                   taxAssumptions: {
                     ...data.additionalParameters?.taxAssumptions,
                     corporateTaxRate: Number(e.target.value)
                   }
                 })}
+                placeholder="0.0"
               />
             </div>
           </CardContent>
@@ -142,18 +149,18 @@ const ParametresSupplementairesSection = () => {
             <div>
               <strong>Conditions de paiement :</strong>
               <ul className="mt-2 space-y-1">
-                <li>Comptant : {data.additionalParameters?.paymentTerms.cash || 40}%</li>
-                <li>30 jours : {data.additionalParameters?.paymentTerms.net30 || 40}%</li>
-                <li>60 jours : {data.additionalParameters?.paymentTerms.net60 || 15}%</li>
-                <li>+60 jours : {data.additionalParameters?.paymentTerms.over60 || 5}%</li>
+                <li>Comptant : {data.additionalParameters?.paymentTerms.cash || 0}%</li>
+                <li>30 jours : {data.additionalParameters?.paymentTerms.net30 || 0}%</li>
+                <li>60 jours : {data.additionalParameters?.paymentTerms.net60 || 0}%</li>
+                <li>+60 jours : {data.additionalParameters?.paymentTerms.over60 || 0}%</li>
               </ul>
             </div>
             <div>
               <strong>Financement et Fiscalité :</strong>
               <ul className="mt-2 space-y-1">
-                <li>Ligne de crédit : {formatCurrency((data.additionalParameters?.creditLine.amount || 50000))}</li>
-                <li>Taux d'intérêt : {formatPercentage((data.additionalParameters?.creditLine.interestRate || 8.5))}</li>
-                <li>Taux d'imposition : {formatPercentage((data.additionalParameters?.taxAssumptions.corporateTaxRate || 28))}</li>
+                <li>Ligne de crédit : {formatCurrency((data.additionalParameters?.creditLine.amount || 0))}</li>
+                <li>Taux d'intérêt : {formatPercentage((data.additionalParameters?.creditLine.interestRate || 0))}</li>
+                <li>Taux d'imposition : {formatPercentage((data.additionalParameters?.taxAssumptions.corporateTaxRate || 0))}</li>
               </ul>
             </div>
           </div>
