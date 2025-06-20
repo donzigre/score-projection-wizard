@@ -50,20 +50,23 @@ const ConfigurationSection = () => {
         .eq('user_id', session.user.id)
         .limit(1);
 
+      // Convertir les données en JSON pour éviter les erreurs TypeScript
+      const projectData = {
+        company_info: JSON.parse(JSON.stringify(data.companyInfo)),
+        fixed_assets: JSON.parse(JSON.stringify(data.fixedAssets)),
+        operating_capital: JSON.parse(JSON.stringify(data.operatingCapital)),
+        funding_sources: JSON.parse(JSON.stringify(data.fundingSources)),
+        products: JSON.parse(JSON.stringify(data.products)),
+        operating_expenses: JSON.parse(JSON.stringify(data.operatingExpenses)),
+        payroll_data: JSON.parse(JSON.stringify(data.payrollData)),
+        additional_parameters: JSON.parse(JSON.stringify(data.additionalParameters)),
+      };
+
       if (existingProjects && existingProjects.length > 0) {
         // Mettre à jour le projet existant
         const { error } = await supabase
           .from('financial_projects')
-          .update({
-            company_info: data.companyInfo,
-            fixed_assets: data.fixedAssets,
-            operating_capital: data.operatingCapital,
-            funding_sources: data.fundingSources,
-            products: data.products,
-            operating_expenses: data.operatingExpenses,
-            payroll_data: data.payrollData,
-            additional_parameters: data.additionalParameters,
-          })
+          .update(projectData)
           .eq('id', existingProjects[0].id);
 
         if (error) throw error;
@@ -72,16 +75,9 @@ const ConfigurationSection = () => {
         const { error } = await supabase
           .from('financial_projects')
           .insert({
+            ...projectData,
             user_id: session.user.id,
             project_name: data.companyInfo.companyName || 'Nouveau Projet',
-            company_info: data.companyInfo,
-            fixed_assets: data.fixedAssets,
-            operating_capital: data.operatingCapital,
-            funding_sources: data.fundingSources,
-            products: data.products,
-            operating_expenses: data.operatingExpenses,
-            payroll_data: data.payrollData,
-            additional_parameters: data.additionalParameters,
           });
 
         if (error) throw error;
