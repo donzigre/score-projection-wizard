@@ -394,14 +394,14 @@ const PointDepartAgricoleSection = () => {
                       <div>
                         <Label className="text-xs">Culture assignée</Label>
                         <Select
-                          value={parcelle.cultureId || ""}
-                          onValueChange={(value) => assignCultureToParcelle(parcelle.id, value)}
+                          value={parcelle.cultureId || "none"}
+                          onValueChange={(value) => assignCultureToParcelle(parcelle.id, value === "none" ? null : value)}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Choisir une culture" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Aucune culture</SelectItem>
+                            <SelectItem value="none">Aucune culture</SelectItem>
                             {getAvailableCrops().map((crop) => (
                               <SelectItem key={crop.id} value={crop.id}>
                                 {crop.name}
