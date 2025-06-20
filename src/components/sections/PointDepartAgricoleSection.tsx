@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
-import { Plus, Trash2, Calculator, Edit, CheckCircle, Banana, Leaf, Carrot, Grain, XCircle } from "lucide-react";
+import { Plus, Trash2, Calculator, Edit, CheckCircle, Banana, Leaf, Carrot, Brain, XCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast"
 import { useFinancialData } from '@/contexts/FinancialDataContext';
 import { useParcelles } from '@/contexts/ParcellesContext';
@@ -25,8 +25,8 @@ import { Parcelle } from '@/types/parcelle';
 import { IVORY_COAST_CROPS, CropType } from '@/config/ivoryCoastAgriculture';
 
 const PointDepartAgricoleSection = () => {
-  const { data, updateFinancialData } = useFinancialData();
-  const { parcelles, addParcelle, updateParcelle, removeParcelle, assignCultureToParcelle, getAllCrops } = useParcelles();
+  const { data } = useFinancialData();
+  const { parcelles, addParcelle, updateParcelle, removeParcelle, assignCultureToParcelle, getAllCrops, getTotalMetrics } = useParcelles();
   const { toast } = useToast();
 
   const [newParcelleName, setNewParcelleName] = useState('');
@@ -107,56 +107,8 @@ const PointDepartAgricoleSection = () => {
     return getAllCrops();
   }, [getAllCrops]);
 
-  const getTotalMetrics = () => {
-    let coutsTotaux = 0;
-    let revenus = 0;
-    let margeTotale = 0;
-    let rentabilite = 0;
-    let revenuMensuelMoyen = 0;
-    let revenuParCycleMoyen = 0;
-    let nombreCyclesParAn = 0;
-
-    parcelles.forEach(parcelle => {
-      const assignedCrop = parcelle.cultureId ? getAvailableCrops().find(c => c.id === parcelle.cultureId) : null;
-
-      let parcelleCoutsTotaux = parcelle.coutsPrepration + parcelle.coutsIntrants + parcelle.coutsMainOeuvre + parcelle.autresCouts;
-      let parcelleRevenus = parcelle.rendementAttendu * parcelle.surface;
-
-      if (assignedCrop) {
-        const costPerHectare = Object.values(assignedCrop.productionCosts).reduce((sum, cost) => sum + cost, 0);
-        parcelleCoutsTotaux = costPerHectare * parcelle.surface;
-
-        const productionEstimee = assignedCrop.averageYieldPerHectare * parcelle.surface;
-        parcelleRevenus = productionEstimee * assignedCrop.regionalPrices.average;
-
-        const cycleMonths = assignedCrop.growthCycle?.duration || 3;
-        const reposPeriod = assignedCrop.growthCycle?.restPeriod || 0;
-        const cyclesPerYear = Math.floor(12 / (cycleMonths + reposPeriod));
-        nombreCyclesParAn += cyclesPerYear;
-
-        revenuMensuelMoyen += parcelleRevenus / 12;
-        revenuParCycleMoyen += parcelleRevenus / cyclesPerYear;
-      }
-
-      coutsTotaux += parcelleCoutsTotaux;
-      revenus += parcelleRevenus;
-      margeTotale += parcelleRevenus - parcelleCoutsTotaux;
-    });
-
-    rentabilite = coutsTotaux > 0 ? (margeTotale / coutsTotaux) * 100 : 0;
-    nombreCyclesParAn = nombreCyclesParAn / parcelles.length;
-    revenuParCycleMoyen = revenuParCycleMoyen / parcelles.length;
-
-    return {
-      coutsTotaux,
-      revenus,
-      margeTotale,
-      rentabilite,
-      revenuMensuelMoyen,
-      revenuParCycleMoyen,
-      nombreCyclesParAn
-    };
-  };
+  // Utiliser les métriques du contexte au lieu de calculer ici
+  const totalMetrics = getTotalMetrics();
 
   const formatNumber = (number: number) => {
     return new Intl.NumberFormat('fr-FR').format(Math.round(number));
@@ -205,7 +157,7 @@ const PointDepartAgricoleSection = () => {
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                    setNewParcelleSurface(value);
+                    setNewParcelleSurface(value === '' ? '' : Number(value));
                   }
                 }}
               />
@@ -381,7 +333,7 @@ const PointDepartAgricoleSection = () => {
               <div className="bg-white p-4 rounded-lg shadow-sm">
                 <p className="text-sm font-medium text-gray-600 mb-2">Coûts Totaux</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {formatCurrency(getTotalMetrics().coutsTotaux)}
+                  {formatCurrency(totalMetrics.coutsTotaux)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Production + Exploitation</p>
               </div>
@@ -389,7 +341,7 @@ const PointDepartAgricoleSection = () => {
               <div className="bg-white p-4 rounded-lg shadow-sm">
                 <p className="text-sm font-medium text-gray-600 mb-2">Revenus Attendus</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {formatCurrency(getTotalMetrics().revenus)}
+                  {formatCurrency(totalMetrics.revenus)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Annuels (tous cycles)</p>
               </div>
@@ -397,7 +349,7 @@ const PointDepartAgricoleSection = () => {
               <div className="bg-white p-4 rounded-lg shadow-sm">
                 <p className="text-sm font-medium text-gray-600 mb-2">Revenu Mensuel Moyen</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {formatCurrency(getTotalMetrics().revenuMensuelMoyen)}
+                  {formatCurrency(totalMetrics.revenuMensuelMoyen)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Flux de trésorerie mensuel</p>
               </div>
@@ -405,20 +357,20 @@ const PointDepartAgricoleSection = () => {
               <div className="bg-white p-4 rounded-lg shadow-sm">
                 <p className="text-sm font-medium text-gray-600 mb-2">Revenu par Cycle Moyen</p>
                 <p className="text-2xl font-bold text-purple-600">
-                  {formatCurrency(getTotalMetrics().revenuParCycleMoyen)}
+                  {formatCurrency(totalMetrics.revenuParCycleMoyen)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {getTotalMetrics().nombreCyclesParAn.toFixed(1)} cycles/an moyenne
+                  {totalMetrics.nombreCyclesParAn.toFixed(1)} cycles/an moyenne
                 </p>
               </div>
               
               <div className="bg-white p-4 rounded-lg shadow-sm">
                 <p className="text-sm font-medium text-gray-600 mb-2">Marge Nette</p>
-                <p className={`text-2xl font-bold ${getTotalMetrics().margeTotale >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {formatCurrency(getTotalMetrics().margeTotale)}
+                <p className={`text-2xl font-bold ${totalMetrics.margeTotale >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatCurrency(totalMetrics.margeTotale)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Rentabilité: {getTotalMetrics().rentabilite.toFixed(1)}%
+                  Rentabilité: {totalMetrics.rentabilite.toFixed(1)}%
                 </p>
               </div>
             </div>

@@ -10,15 +10,13 @@ export const calculateParcelleProductionCosts = (parcelle: Parcelle, assignedCro
   }
 
   // Calculs automatiques basés sur les données CNRA/ANADER
-  const preparationCosts = assignedCrop.productionCosts.preparation || 0;
-  const seedCosts = assignedCrop.productionCosts.seeds || 0;
-  const fertiliserCosts = assignedCrop.productionCosts.fertilizer || 0;
+  // Utiliser les noms français des propriétés selon la structure réelle
+  const seedCosts = assignedCrop.productionCosts.semences || 0;
+  const fertiliserCosts = assignedCrop.productionCosts.engrais || 0;
   const pesticideCosts = assignedCrop.productionCosts.pesticides || 0;
-  const laborCosts = assignedCrop.productionCosts.labor || 0;
-  const otherCosts = assignedCrop.productionCosts.other || 0;
+  const laborCosts = assignedCrop.productionCosts.mainOeuvre || 0;
 
-  const costPerHectare = preparationCosts + seedCosts + fertiliserCosts + 
-                        pesticideCosts + laborCosts + otherCosts;
+  const costPerHectare = seedCosts + fertiliserCosts + pesticideCosts + laborCosts;
   
   return costPerHectare * parcelle.surface;
 };
@@ -35,9 +33,9 @@ export const calculateParcelleRevenue = (parcelle: Parcelle, assignedCrop?: Crop
   }
 
   // Calculs automatiques
-  const cycleMonths = assignedCrop.growthCycle?.duration || 3;
-  const reposPeriod = assignedCrop.growthCycle?.restPeriod || 0;
-  const cyclesPerYear = calculateCyclesPerYear(cycleMonths, reposPeriod);
+  // Utiliser cycleMonths directement puisque growthCycle n'existe pas
+  const cycleMonths = assignedCrop.cycleMonths || 3;
+  const cyclesPerYear = calculateCyclesPerYear(cycleMonths, 0);
   
   const productionPerCycle = assignedCrop.averageYieldPerHectare * parcelle.surface;
   const revenuePerCycle = productionPerCycle * assignedCrop.regionalPrices.average;

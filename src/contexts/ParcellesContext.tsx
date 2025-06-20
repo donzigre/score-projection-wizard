@@ -95,9 +95,9 @@ export const ParcellesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const revenuMensuelMoyen = calculateMonthlyRevenue(revenus);
     const revenuParCycleMoyen = calculateRevenuePerCycle(parcelle, assignedCrop);
     
-    const cycleMonths = assignedCrop?.growthCycle?.duration || 3;
-    const reposPeriod = assignedCrop?.growthCycle?.restPeriod || 0;
-    const nombreCyclesParAn = calculateCyclesPerYear(cycleMonths, reposPeriod);
+    // Utiliser cycleMonths au lieu de growthCycle
+    const cycleMonths = assignedCrop?.cycleMonths || 3;
+    const nombreCyclesParAn = calculateCyclesPerYear(cycleMonths, 0);
 
     return {
       coutsTotaux,
