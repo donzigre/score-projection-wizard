@@ -21,6 +21,8 @@ export interface CropType {
   description: string;
   bestRegions: string[];
   rotationCompatible: string[];
+  averagePricePerUnit: number;
+  averageCostPerUnit: number;
 }
 
 export const IVORY_COAST_CROPS: CropType[] = [
@@ -38,7 +40,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 25000,
     description: 'Culture maraîchère très rentable, 3-4 cycles par an possible',
     bestRegions: ['Abidjan', 'Bouaké', 'Korhogo'],
-    rotationCompatible: ['salade', 'gombo', 'haricot-vert']
+    rotationCompatible: ['salade', 'gombo', 'haricot-vert'],
+    averagePricePerUnit: 2750,
+    averageCostPerUnit: 300
   },
   {
     id: 'oignon',
@@ -53,7 +57,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 400000,
     description: 'Culture de contre-saison très profitable, forte demande',
     bestRegions: ['Korhogo', 'Ferkessédougou', 'Bouaké'],
-    rotationCompatible: ['mais', 'riz']
+    rotationCompatible: ['mais', 'riz'],
+    averagePricePerUnit: 37500,
+    averageCostPerUnit: 3250
   },
   {
     id: 'salade',
@@ -68,7 +74,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 100000,
     description: 'Cycle très court, rotation rapide, marché urbain',
     bestRegions: ['Abidjan', 'Yamoussoukro', 'Bouaké'],
-    rotationCompatible: ['tomate', 'chou', 'carotte']
+    rotationCompatible: ['tomate', 'chou', 'carotte'],
+    averagePricePerUnit: 300,
+    averageCostPerUnit: 31
   },
   {
     id: 'gombo',
@@ -83,7 +91,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 40000,
     description: 'Légume traditionnel très demandé, résistant',
     bestRegions: ['Toutes régions'],
-    rotationCompatible: ['aubergine', 'piment', 'haricot-vert']
+    rotationCompatible: ['aubergine', 'piment', 'haricot-vert'],
+    averagePricePerUnit: 425,
+    averageCostPerUnit: 36
   },
   {
     id: 'aubergine',
@@ -98,7 +108,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 20000,
     description: 'Production étalée, bon rendement',
     bestRegions: ['Abidjan', 'Bouaké', 'San-Pédro'],
-    rotationCompatible: ['gombo', 'piment', 'concombre']
+    rotationCompatible: ['gombo', 'piment', 'concombre'],
+    averagePricePerUnit: 325,
+    averageCostPerUnit: 25
   },
   {
     id: 'piment',
@@ -113,7 +125,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 25000,
     description: 'Forte valeur ajoutée, demande croissante',
     bestRegions: ['Toutes régions'],
-    rotationCompatible: ['aubergine', 'gombo', 'tomate']
+    rotationCompatible: ['aubergine', 'gombo', 'tomate'],
+    averagePricePerUnit: 1150,
+    averageCostPerUnit: 38
   },
   {
     id: 'chou',
@@ -128,7 +142,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 40000,
     description: 'Légume de saison fraîche, bon rendement',
     bestRegions: ['Bouaké', 'Korhogo', 'Man'],
-    rotationCompatible: ['carotte', 'salade', 'haricot-vert']
+    rotationCompatible: ['carotte', 'salade', 'haricot-vert'],
+    averagePricePerUnit: 225,
+    averageCostPerUnit: 26
   },
   {
     id: 'carotte',
@@ -143,7 +159,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 500000,
     description: 'Culture de saison fraîche, marché en croissance',
     bestRegions: ['Bouaké', 'Korhogo', 'Man'],
-    rotationCompatible: ['chou', 'salade', 'oignon']
+    rotationCompatible: ['chou', 'salade', 'oignon'],
+    averagePricePerUnit: 300,
+    averageCostPerUnit: 28
   },
   {
     id: 'concombre',
@@ -158,7 +176,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 15000,
     description: 'Culture polyvalente, demande urbaine',
     bestRegions: ['Abidjan', 'Bouaké', 'Yamoussoukro'],
-    rotationCompatible: ['tomate', 'aubergine', 'gombo']
+    rotationCompatible: ['tomate', 'aubergine', 'gombo'],
+    averagePricePerUnit: 275,
+    averageCostPerUnit: 16
   },
   {
     id: 'haricot-vert',
@@ -173,7 +193,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 250000,
     description: 'Cycle court, améliore le sol, rentable',
     bestRegions: ['Bouaké', 'Korhogo', 'Daloa'],
-    rotationCompatible: ['mais', 'riz', 'chou']
+    rotationCompatible: ['mais', 'riz', 'chou'],
+    averagePricePerUnit: 550,
+    averageCostPerUnit: 39
   },
 
   // Cultures vivrières
@@ -190,7 +212,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 53000,
     description: 'Céréale de base, forte demande locale',
     bestRegions: ['Toutes régions'],
-    rotationCompatible: ['arachide', 'niebe', 'soja']
+    rotationCompatible: ['arachide', 'niebe', 'soja'],
+    averagePricePerUnit: 18500,
+    averageCostPerUnit: 3625
   },
   {
     id: 'riz',
@@ -205,7 +229,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 120000,
     description: 'Aliment de base, marché garanti',
     bestRegions: ['Bouaké', 'Korhogo', 'Ferkessédougou'],
-    rotationCompatible: ['mais', 'arachide', 'niebe']
+    rotationCompatible: ['mais', 'arachide', 'niebe'],
+    averagePricePerUnit: 22000,
+    averageCostPerUnit: 6500
   },
   {
     id: 'arachide',
@@ -220,7 +246,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 125000,
     description: 'Légumineuse riche en protéines, améliore le sol',
     bestRegions: ['Bouaké', 'Korhogo', 'Katiola'],
-    rotationCompatible: ['mais', 'riz', 'soja']
+    rotationCompatible: ['mais', 'riz', 'soja'],
+    averagePricePerUnit: 47500,
+    averageCostPerUnit: 11400
   },
   {
     id: 'soja',
@@ -235,7 +263,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 400000,
     description: 'Forte demande industrielle, enrichit le sol',
     bestRegions: ['Bouaké', 'Katiola', 'Ferkessédougou'],
-    rotationCompatible: ['mais', 'riz', 'arachide']
+    rotationCompatible: ['mais', 'riz', 'arachide'],
+    averagePricePerUnit: 55000,
+    averageCostPerUnit: 11000
   },
   {
     id: 'niebe',
@@ -250,7 +280,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 62500,
     description: 'Haricot local, résistant à la sécheresse',
     bestRegions: ['Korhogo', 'Ferkessédougou', 'Odienné'],
-    rotationCompatible: ['mais', 'riz', 'sesame']
+    rotationCompatible: ['mais', 'riz', 'sesame'],
+    averagePricePerUnit: 60000,
+    averageCostPerUnit: 11000
   },
   {
     id: 'sesame',
@@ -265,7 +297,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 200000,
     description: 'Culture de rente, forte valeur ajoutée',
     bestRegions: ['Korhogo', 'Ferkessédougou', 'Bondoukou'],
-    rotationCompatible: ['mais', 'arachide', 'niebe']
+    rotationCompatible: ['mais', 'arachide', 'niebe'],
+    averagePricePerUnit: 100000,
+    averageCostPerUnit: 19375
   },
 
   // Tubercules
@@ -282,7 +316,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 10000,
     description: 'Tubercule de sécurité alimentaire, transformation possible',
     bestRegions: ['Toutes régions'],
-    rotationCompatible: ['mais', 'arachide', 'plantain']
+    rotationCompatible: ['mais', 'arachide', 'plantain'],
+    averagePricePerUnit: 80000,
+    averageCostPerUnit: 22000
   },
   {
     id: 'igname',
@@ -297,7 +333,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 10000,
     description: 'Tubercule noble, forte valeur culturelle et commerciale',
     bestRegions: ['Bouaké', 'Yamoussoukro', 'Daloa'],
-    rotationCompatible: ['mais', 'arachide', 'plantain']
+    rotationCompatible: ['mais', 'arachide', 'plantain'],
+    averagePricePerUnit: 125000,
+    averageCostPerUnit: 42500
   },
   {
     id: 'plantain',
@@ -312,7 +350,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 1600,
     description: 'Culture pérenne, production continue, forte demande',
     bestRegions: ['Abidjan', 'San-Pédro', 'Daloa'],
-    rotationCompatible: ['manioc', 'igname', 'banane']
+    rotationCompatible: ['manioc', 'igname', 'banane'],
+    averagePricePerUnit: 200,
+    averageCostPerUnit: 28
   },
   {
     id: 'banane-douce',
@@ -327,7 +367,9 @@ export const IVORY_COAST_CROPS: CropType[] = [
     plantingDensity: 1600,
     description: 'Fruit de dessert, marché urbain en croissance',
     bestRegions: ['Abidjan', 'San-Pédro', 'Soubré'],
-    rotationCompatible: ['plantain', 'manioc', 'igname']
+    rotationCompatible: ['plantain', 'manioc', 'igname'],
+    averagePricePerUnit: 275,
+    averageCostPerUnit: 27
   }
 ];
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,10 +11,10 @@ import { formatCurrency } from '@/utils/formatting';
 import { IVORY_COAST_CROPS, CropType } from '@/config/ivoryCoastAgriculture';
 
 const GestionParcellesCulturesSection = () => {
-  const { parcelles, addParcelle, updateParcelle, removeParcelle, calculateParcelleMetrics, getTotalMetrics } = useParcelles();
+  const { parcelles, addParcelle, updateParcelle, removeParcelle, calculateParcelleMetrics, getTotalMetrics, getAllCrops } = useParcelles();
   const { data, updateProduct, addProduct, removeProduct, assignProductToParcelle, calculateProductRevenue } = useFinancialData();
   
-  const [selectedCropType, setSelectedCropType] = useState<'all' | 'maraichage' | 'vivrier'>('all');
+  const [selectedCropType, setSelectedCropType] = useState<'all' | 'maraichage' | 'vivrier' | 'tubercule' | 'legumineuse'>('all');
   const [newParcelleData, setNewParcelleData] = useState({
     nom: '',
     surface: 0,
@@ -63,7 +62,8 @@ const GestionParcellesCulturesSection = () => {
   };
 
   const handleAssignCulture = (parcelleId: string, cropId: string) => {
-    const selectedCrop = IVORY_COAST_CROPS.find(c => c.id === cropId);
+    const allCrops = getAllCrops();
+    const selectedCrop = allCrops.find(c => c.id === cropId);
     const parcelle = parcelles.find(p => p.id === parcelleId);
     
     if (selectedCrop && parcelle) {
@@ -86,7 +86,7 @@ const GestionParcellesCulturesSection = () => {
               parcelleId: parcelleId,
               pricePerUnit: selectedCrop.averagePricePerUnit,
               cogsPerUnit: automaticCOGS,
-              cropType: selectedCrop.category,
+              cropType: selectedCrop.category as 'maraichage' | 'vivrier',
               unit: selectedCrop.unitType,
               cycleMonths: selectedCrop.cycleMonths,
               periodeRepos: Math.floor(selectedCrop.cycleMonths * 0.2),
@@ -125,7 +125,8 @@ const GestionParcellesCulturesSection = () => {
     const assignedProduct = data.products.find(p => p.parcelleId === parcelleId);
     
     if (parcelle && assignedProduct && assignedProduct.cropId) {
-      const crop = IVORY_COAST_CROPS.find(c => c.id === assignedProduct.cropId);
+      const allCrops = getAllCrops();
+      const crop = allCrops.find(c => c.id === assignedProduct.cropId);
       if (crop) {
         const newCOGS = calculateAutomaticCOGS({...parcelle, [field]: value}, crop);
         updateProduct(assignedProduct.id, { cogsPerUnit: newCOGS });
@@ -141,9 +142,10 @@ const GestionParcellesCulturesSection = () => {
   };
 
   // Filtrer les cultures selon le type sélectionné
+  const allCrops = getAllCrops();
   const filteredCrops = selectedCropType === 'all' 
-    ? IVORY_COAST_CROPS 
-    : IVORY_COAST_CROPS.filter(crop => crop.category === selectedCropType);
+    ? allCrops 
+    : allCrops.filter(crop => crop.category === selectedCropType);
 
   const totalMetrics = getTotalMetrics();
 
@@ -301,6 +303,18 @@ const GestionParcellesCulturesSection = () => {
                   <div className="flex items-center gap-2">
                     <Wheat className="h-4 w-4 text-amber-600" />
                     Vivrier (cycles longs)
+                  </div>
+                </SelectItem>
+                <SelectItem value="tubercule">
+                  <div className="flex items-center gap-2">
+                    <Wheat className="h-4 w-4 text-orange-600" />
+                    Tubercules
+                  </div>
+                </SelectItem>
+                <SelectItem value="legumineuse">
+                  <div className="flex items-center gap-2">
+                    <Leaf className="h-4 w-4 text-purple-600" />
+                    Légumineuses
                   </div>
                 </SelectItem>
               </SelectContent>

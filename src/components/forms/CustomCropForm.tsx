@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,7 +37,9 @@ export const CustomCropForm: React.FC<CustomCropFormProps> = ({
     plantingDensity: initialData?.plantingDensity || 0,
     description: initialData?.description || '',
     bestRegions: initialData?.bestRegions || [],
-    rotationCompatible: initialData?.rotationCompatible || []
+    rotationCompatible: initialData?.rotationCompatible || [],
+    averagePricePerUnit: initialData?.averagePricePerUnit || 0,
+    averageCostPerUnit: initialData?.averageCostPerUnit || 0
   });
 
   const [newRegion, setNewRegion] = useState('');
@@ -48,10 +49,10 @@ export const CustomCropForm: React.FC<CustomCropFormProps> = ({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const updateNestedField = (parent: string, field: string, value: any) => {
+  const updateNestedField = (parent: keyof typeof formData, field: string, value: any) => {
     setFormData(prev => ({
       ...prev,
-      [parent]: { ...prev[parent as keyof typeof prev], [field]: value }
+      [parent]: { ...(prev[parent] as any), [field]: value }
     }));
   };
 
@@ -81,12 +82,14 @@ export const CustomCropForm: React.FC<CustomCropFormProps> = ({
     e.preventDefault();
     
     // Calculer le prix moyen si min et max sont renseignés
-    if (formData.regionalPrices.min > 0 && formData.regionalPrices.max > 0 && formData.regionalPrices.average === 0) {
-      const average = (formData.regionalPrices.min + formData.regionalPrices.max) / 2;
-      updateNestedField('regionalPrices', 'average', average);
+    const updatedFormData = { ...formData };
+    if (updatedFormData.regionalPrices.min > 0 && updatedFormData.regionalPrices.max > 0 && updatedFormData.regionalPrices.average === 0) {
+      const average = (updatedFormData.regionalPrices.min + updatedFormData.regionalPrices.max) / 2;
+      updatedFormData.regionalPrices.average = average;
+      updatedFormData.averagePricePerUnit = average;
     }
     
-    onSubmit(formData);
+    onSubmit(updatedFormData);
   };
 
   const isFormValid = formData.name && formData.averageYieldPerHectare > 0 && formData.regionalPrices.average > 0;
@@ -226,7 +229,11 @@ export const CustomCropForm: React.FC<CustomCropFormProps> = ({
                     id="price-avg"
                     type="number"
                     value={formData.regionalPrices.average}
-                    onChange={(e) => updateNestedField('regionalPrices', 'average', Number(e.target.value))}
+                    onChange={(e) => {
+                      const avgPrice = Number(e.target.value);
+                      updateNestedField('regionalPrices', 'average', avgPrice);
+                      updateFormData('averagePricePerUnit', avgPrice);
+                    }}
                     placeholder="Ex: 300"
                     required
                   />
