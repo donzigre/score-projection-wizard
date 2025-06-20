@@ -29,4 +29,7 @@ export interface ParcelleCalculations {
   margeParHectare: number;
   margeTotale: number;
   rentabilite: number; // en pourcentage
+  revenuMensuelMoyen: number;
+  revenuParCycleMoyen: number;
+  nombreCyclesParAn: number;
 }

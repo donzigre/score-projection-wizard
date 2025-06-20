@@ -2,6 +2,13 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Parcelle, CultureParcelle, ParcelleCalculations } from '@/types/parcelle';
 import { IVORY_COAST_CROPS, CropType } from '@/config/ivoryCoastAgriculture';
+import { 
+  calculateParcelleProductionCosts, 
+  calculateParcelleRevenue, 
+  calculateMonthlyRevenue, 
+  calculateRevenuePerCycle,
+  calculateCyclesPerYear 
+} from '@/utils/parcelleCalculations';
 
 interface ParcellesContextType {
   parcelles: Parcelle[];
@@ -10,7 +17,7 @@ interface ParcellesContextType {
   addParcelle: (parcelle: Omit<Parcelle, 'id' | 'dateCreation'>) => void;
   updateParcelle: (id: string, updates: Partial<Parcelle>) => void;
   removeParcelle: (id: string) => void;
-  assignCultureToParcelle: (parcelleId: string, cultureId: string) => void;
+  assignCultureToParcelle: (parcelleId: string, cultureId: string | null) => void;
   addCustomCrop: (crop: Omit<CropType, 'id'>) => void;
   getAllCrops: () => CropType[];
   calculateParcelleMetrics: (parcelleId: string) => ParcelleCalculations;
@@ -42,7 +49,7 @@ export const ParcellesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setCulturesParcelles(prev => prev.filter(cp => cp.parcelleId !== id));
   }, []);
 
-  const assignCultureToParcelle = useCallback((parcelleId: string, cultureId: string) => {
+  const assignCultureToParcelle = useCallback((parcelleId: string, cultureId: string | null) => {
     updateParcelle(parcelleId, { cultureId });
   }, [updateParcelle]);
 
@@ -60,48 +67,85 @@ export const ParcellesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const calculateParcelleMetrics = useCallback((parcelleId: string): ParcelleCalculations => {
     const parcelle = parcelles.find(p => p.id === parcelleId);
-    if (!parcelle) return { coutsTotaux: 0, revenus: 0, margeParHectare: 0, margeTotale: 0, rentabilite: 0 };
-
-    const allCrops = getAllCrops();
-    const assignedCrop = allCrops.find(c => c.id === parcelle.cultureId);
-    
-    let coutsTotaux = parcelle.coutsPrepration + parcelle.coutsIntrants + 
-                     parcelle.coutsMainOeuvre + parcelle.autresCouts;
-    let revenus = parcelle.rendementAttendu * parcelle.surface;
-
-    // Si une culture est assignée, utiliser ses données pour les calculs automatiques
-    if (assignedCrop) {
-      const costPerHectare = Object.values(assignedCrop.productionCosts).reduce((sum, cost) => sum + cost, 0);
-      coutsTotaux = costPerHectare * parcelle.surface;
-      
-      const productionEstimee = assignedCrop.averageYieldPerHectare * parcelle.surface;
-      revenus = productionEstimee * assignedCrop.regionalPrices.average;
+    if (!parcelle) {
+      return { 
+        coutsTotaux: 0, 
+        revenus: 0, 
+        margeParHectare: 0, 
+        margeTotale: 0, 
+        rentabilite: 0,
+        revenuMensuelMoyen: 0,
+        revenuParCycleMoyen: 0,
+        nombreCyclesParAn: 0
+      };
     }
 
+    const allCrops = getAllCrops();
+    const assignedCrop = parcelle.cultureId ? allCrops.find(c => c.id === parcelle.cultureId) : undefined;
+    
+    // Utiliser les fonctions unifiées de calcul
+    const coutsTotaux = calculateParcelleProductionCosts(parcelle, assignedCrop);
+    const revenus = calculateParcelleRevenue(parcelle, assignedCrop);
+    
     const margeTotale = revenus - coutsTotaux;
     const margeParHectare = parcelle.surface > 0 ? margeTotale / parcelle.surface : 0;
     const rentabilite = coutsTotaux > 0 ? (margeTotale / coutsTotaux) * 100 : 0;
+    
+    // Nouveaux calculs pour les revenus mensuels et par cycles
+    const revenuMensuelMoyen = calculateMonthlyRevenue(revenus);
+    const revenuParCycleMoyen = calculateRevenuePerCycle(parcelle, assignedCrop);
+    
+    const cycleMonths = assignedCrop?.growthCycle?.duration || 3;
+    const reposPeriod = assignedCrop?.growthCycle?.restPeriod || 0;
+    const nombreCyclesParAn = calculateCyclesPerYear(cycleMonths, reposPeriod);
 
     return {
       coutsTotaux,
       revenus,
       margeParHectare,
       margeTotale,
-      rentabilite
+      rentabilite,
+      revenuMensuelMoyen,
+      revenuParCycleMoyen,
+      nombreCyclesParAn
     };
   }, [parcelles, getAllCrops]);
 
   const getTotalMetrics = useCallback((): ParcelleCalculations => {
-    return parcelles.reduce((total, parcelle) => {
+    const totals = parcelles.reduce((total, parcelle) => {
       const metrics = calculateParcelleMetrics(parcelle.id);
       return {
         coutsTotaux: total.coutsTotaux + metrics.coutsTotaux,
         revenus: total.revenus + metrics.revenus,
         margeParHectare: 0, // N/A pour le total
         margeTotale: total.margeTotale + metrics.margeTotale,
-        rentabilite: 0 // Calculé après
+        rentabilite: 0, // Calculé après
+        revenuMensuelMoyen: total.revenuMensuelMoyen + metrics.revenuMensuelMoyen,
+        revenuParCycleMoyen: total.revenuParCycleMoyen + metrics.revenuParCycleMoyen,
+        nombreCyclesParAn: total.nombreCyclesParAn + metrics.nombreCyclesParAn
       };
-    }, { coutsTotaux: 0, revenus: 0, margeParHectare: 0, margeTotale: 0, rentabilite: 0 });
+    }, { 
+      coutsTotaux: 0, 
+      revenus: 0, 
+      margeParHectare: 0, 
+      margeTotale: 0, 
+      rentabilite: 0,
+      revenuMensuelMoyen: 0,
+      revenuParCycleMoyen: 0,
+      nombreCyclesParAn: 0
+    });
+
+    // Calculer la rentabilité globale
+    totals.rentabilite = totals.coutsTotaux > 0 ? (totals.margeTotale / totals.coutsTotaux) * 100 : 0;
+    
+    // Calculer les moyennes pour les métriques par cycle
+    const nombreParcelles = parcelles.length;
+    if (nombreParcelles > 0) {
+      totals.revenuParCycleMoyen = totals.revenuParCycleMoyen / nombreParcelles;
+      totals.nombreCyclesParAn = totals.nombreCyclesParAn / nombreParcelles;
+    }
+
+    return totals;
   }, [parcelles, calculateParcelleMetrics]);
 
   const value: ParcellesContextType = {
