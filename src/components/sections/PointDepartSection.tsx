@@ -125,9 +125,30 @@ const PointDepartSection = () => {
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Point de Départ - Agriculture Ivoirienne</h2>
-        <p className="text-gray-600">Configurez vos investissements initiaux et sources de financement pour votre exploitation agricole</p>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">Point de Départ - Configuration Avancée</h2>
+        <p className="text-gray-600">Configuration détaillée des immobilisations et sources de financement</p>
       </div>
+
+      {/* Notice de redirection */}
+      <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+        <CardContent className="pt-6">
+          <div className="text-center">
+            <h3 className="text-xl font-semibold text-green-800 mb-2">
+              🌱 Nouveau : Point de Départ Agricole Simplifié
+            </h3>
+            <p className="text-green-700 mb-4">
+              Découvrez notre nouveau workflow agricole qui vous guide étape par étape depuis la configuration 
+              de vos parcelles jusqu'au calcul automatique des coûts selon vos cultures.
+            </p>
+            <Button 
+              className="bg-green-600 hover:bg-green-700"
+              onClick={() => window.location.href = '/#point-depart-agricole'}
+            >
+              Essayer le Point de Départ Agricole
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid md:grid-cols-2 gap-6">
         <InfoCard 

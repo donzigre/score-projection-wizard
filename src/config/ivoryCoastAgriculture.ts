@@ -1,19 +1,30 @@
-
 export interface CropType {
   id: string;
   name: string;
-  category: 'maraichage' | 'vivrier';
+  category: 'maraichage' | 'vivrier' | 'tubercule' | 'legumineuse';
   cycleMonths: number;
   seasons: string[];
-  unitType: 'kg' | 'tonne' | 'sac' | 'cuvette';
+  unitType: 'kg' | 'tonne' | 'sac' | 'cuvette' | 'botte' | 'panier';
   averageYieldPerHectare: number;
-  averagePricePerUnit: number;
-  averageCostPerUnit: number;
+  regionalPrices: {
+    min: number;
+    max: number;
+    average: number;
+  };
+  productionCosts: {
+    semences: number; // FCFA par hectare
+    engrais: number;
+    pesticides: number;
+    mainOeuvre: number;
+  };
+  plantingDensity: number; // plants par hectare
   description: string;
+  bestRegions: string[];
+  rotationCompatible: string[];
 }
 
 export const IVORY_COAST_CROPS: CropType[] = [
-  // Cultures maraîchères (cycles courts)
+  // Cultures maraîchères
   {
     id: 'tomate',
     name: 'Tomate',
@@ -22,9 +33,12 @@ export const IVORY_COAST_CROPS: CropType[] = [
     seasons: ['Saison sèche', 'Début hivernage'],
     unitType: 'cuvette',
     averageYieldPerHectare: 1500,
-    averagePricePerUnit: 2500,
-    averageCostPerUnit: 1200,
-    description: 'Culture maraîchère rentable, 3-4 cycles par an'
+    regionalPrices: { min: 2000, max: 3500, average: 2750 },
+    productionCosts: { semences: 80000, engrais: 120000, pesticides: 60000, mainOeuvre: 180000 },
+    plantingDensity: 25000,
+    description: 'Culture maraîchère très rentable, 3-4 cycles par an possible',
+    bestRegions: ['Abidjan', 'Bouaké', 'Korhogo'],
+    rotationCompatible: ['salade', 'gombo', 'haricot-vert']
   },
   {
     id: 'oignon',
@@ -34,9 +48,12 @@ export const IVORY_COAST_CROPS: CropType[] = [
     seasons: ['Saison sèche'],
     unitType: 'sac',
     averageYieldPerHectare: 200,
-    averagePricePerUnit: 35000,
-    averageCostPerUnit: 18000,
-    description: 'Culture de contre-saison très profitable'
+    regionalPrices: { min: 30000, max: 45000, average: 37500 },
+    productionCosts: { semences: 150000, engrais: 200000, pesticides: 80000, mainOeuvre: 220000 },
+    plantingDensity: 400000,
+    description: 'Culture de contre-saison très profitable, forte demande',
+    bestRegions: ['Korhogo', 'Ferkessédougou', 'Bouaké'],
+    rotationCompatible: ['mais', 'riz']
   },
   {
     id: 'salade',
@@ -44,11 +61,14 @@ export const IVORY_COAST_CROPS: CropType[] = [
     category: 'maraichage',
     cycleMonths: 2,
     seasons: ['Saison sèche', 'Début hivernage'],
-    unitType: 'cuvette',
-    averageYieldPerHectare: 2000,
-    averagePricePerUnit: 1500,
-    averageCostPerUnit: 800,
-    description: 'Cycle très court, rotation rapide'
+    unitType: 'botte',
+    averageYieldPerHectare: 8000,
+    regionalPrices: { min: 200, max: 400, average: 300 },
+    productionCosts: { semences: 40000, engrais: 60000, pesticides: 30000, mainOeuvre: 120000 },
+    plantingDensity: 100000,
+    description: 'Cycle très court, rotation rapide, marché urbain',
+    bestRegions: ['Abidjan', 'Yamoussoukro', 'Bouaké'],
+    rotationCompatible: ['tomate', 'chou', 'carotte']
   },
   {
     id: 'gombo',
@@ -58,9 +78,12 @@ export const IVORY_COAST_CROPS: CropType[] = [
     seasons: ['Hivernage', 'Post-hivernage'],
     unitType: 'kg',
     averageYieldPerHectare: 8000,
-    averagePricePerUnit: 400,
-    averageCostPerUnit: 200,
-    description: 'Légume traditionnel très demandé'
+    regionalPrices: { min: 350, max: 500, average: 425 },
+    productionCosts: { semences: 25000, engrais: 80000, pesticides: 40000, mainOeuvre: 140000 },
+    plantingDensity: 40000,
+    description: 'Légume traditionnel très demandé, résistant',
+    bestRegions: ['Toutes régions'],
+    rotationCompatible: ['aubergine', 'piment', 'haricot-vert']
   },
   {
     id: 'aubergine',
@@ -70,12 +93,90 @@ export const IVORY_COAST_CROPS: CropType[] = [
     seasons: ['Hivernage', 'Post-hivernage'],
     unitType: 'kg',
     averageYieldPerHectare: 15000,
-    averagePricePerUnit: 300,
-    averageCostPerUnit: 150,
-    description: 'Production étalée sur plusieurs mois'
+    regionalPrices: { min: 250, max: 400, average: 325 },
+    productionCosts: { semences: 60000, engrais: 100000, pesticides: 50000, mainOeuvre: 160000 },
+    plantingDensity: 20000,
+    description: 'Production étalée, bon rendement',
+    bestRegions: ['Abidjan', 'Bouaké', 'San-Pédro'],
+    rotationCompatible: ['gombo', 'piment', 'concombre']
+  },
+  {
+    id: 'piment',
+    name: 'Piment',
+    category: 'maraichage',
+    cycleMonths: 4,
+    seasons: ['Hivernage', 'Post-hivernage'],
+    unitType: 'kg',
+    averageYieldPerHectare: 12000,
+    regionalPrices: { min: 800, max: 1500, average: 1150 },
+    productionCosts: { semences: 80000, engrais: 120000, pesticides: 60000, mainOeuvre: 180000 },
+    plantingDensity: 25000,
+    description: 'Forte valeur ajoutée, demande croissante',
+    bestRegions: ['Toutes régions'],
+    rotationCompatible: ['aubergine', 'gombo', 'tomate']
+  },
+  {
+    id: 'chou',
+    name: 'Chou',
+    category: 'maraichage',
+    cycleMonths: 3,
+    seasons: ['Saison sèche'],
+    unitType: 'kg',
+    averageYieldPerHectare: 20000,
+    regionalPrices: { min: 150, max: 300, average: 225 },
+    productionCosts: { semences: 100000, engrais: 150000, pesticides: 80000, mainOeuvre: 200000 },
+    plantingDensity: 40000,
+    description: 'Légume de saison fraîche, bon rendement',
+    bestRegions: ['Bouaké', 'Korhogo', 'Man'],
+    rotationCompatible: ['carotte', 'salade', 'haricot-vert']
+  },
+  {
+    id: 'carotte',
+    name: 'Carotte',
+    category: 'maraichage',
+    cycleMonths: 3,
+    seasons: ['Saison sèche'],
+    unitType: 'kg',
+    averageYieldPerHectare: 15000,
+    regionalPrices: { min: 200, max: 400, average: 300 },
+    productionCosts: { semences: 120000, engrais: 100000, pesticides: 50000, mainOeuvre: 150000 },
+    plantingDensity: 500000,
+    description: 'Culture de saison fraîche, marché en croissance',
+    bestRegions: ['Bouaké', 'Korhogo', 'Man'],
+    rotationCompatible: ['chou', 'salade', 'oignon']
+  },
+  {
+    id: 'concombre',
+    name: 'Concombre',
+    category: 'maraichage',
+    cycleMonths: 3,
+    seasons: ['Hivernage', 'Saison sèche'],
+    unitType: 'kg',
+    averageYieldPerHectare: 18000,
+    regionalPrices: { min: 200, max: 350, average: 275 },
+    productionCosts: { semences: 50000, engrais: 80000, pesticides: 40000, mainOeuvre: 120000 },
+    plantingDensity: 15000,
+    description: 'Culture polyvalente, demande urbaine',
+    bestRegions: ['Abidjan', 'Bouaké', 'Yamoussoukro'],
+    rotationCompatible: ['tomate', 'aubergine', 'gombo']
+  },
+  {
+    id: 'haricot-vert',
+    name: 'Haricot Vert',
+    category: 'maraichage',
+    cycleMonths: 2,
+    seasons: ['Hivernage', 'Post-hivernage'],
+    unitType: 'kg',
+    averageYieldPerHectare: 8000,
+    regionalPrices: { min: 400, max: 700, average: 550 },
+    productionCosts: { semences: 60000, engrais: 80000, pesticides: 30000, mainOeuvre: 140000 },
+    plantingDensity: 250000,
+    description: 'Cycle court, améliore le sol, rentable',
+    bestRegions: ['Bouaké', 'Korhogo', 'Daloa'],
+    rotationCompatible: ['mais', 'riz', 'chou']
   },
 
-  // Cultures vivrières (cycles longs)
+  // Cultures vivrières
   {
     id: 'mais',
     name: 'Maïs',
@@ -84,57 +185,149 @@ export const IVORY_COAST_CROPS: CropType[] = [
     seasons: ['Hivernage'],
     unitType: 'sac',
     averageYieldPerHectare: 80,
-    averagePricePerUnit: 18000,
-    averageCostPerUnit: 8000,
-    description: 'Céréale de base, forte demande locale'
+    regionalPrices: { min: 15000, max: 22000, average: 18500 },
+    productionCosts: { semences: 40000, engrais: 120000, pesticides: 30000, mainOeuvre: 100000 },
+    plantingDensity: 53000,
+    description: 'Céréale de base, forte demande locale',
+    bestRegions: ['Toutes régions'],
+    rotationCompatible: ['arachide', 'niebe', 'soja']
   },
   {
     id: 'riz',
-    name: 'Riz pluvial',
+    name: 'Riz Pluvial',
     category: 'vivrier',
     cycleMonths: 5,
     seasons: ['Hivernage'],
     unitType: 'sac',
     averageYieldPerHectare: 60,
-    averagePricePerUnit: 22000,
-    averageCostPerUnit: 12000,
-    description: 'Aliment de base, marché garanti'
-  },
-  {
-    id: 'manioc',
-    name: 'Manioc',
-    category: 'vivrier',
-    cycleMonths: 12,
-    seasons: ['Toute année'],
-    unitType: 'tonne',
-    averageYieldPerHectare: 15,
-    averagePricePerUnit: 80000,
-    averageCostPerUnit: 35000,
-    description: 'Tubercule de sécurité alimentaire'
-  },
-  {
-    id: 'igname',
-    name: 'Igname',
-    category: 'vivrier',
-    cycleMonths: 8,
-    seasons: ['Début hivernage'],
-    unitType: 'tonne',
-    averageYieldPerHectare: 12,
-    averagePricePerUnit: 120000,
-    averageCostPerUnit: 60000,
-    description: 'Tubercule noble, forte valeur ajoutée'
+    regionalPrices: { min: 18000, max: 26000, average: 22000 },
+    productionCosts: { semences: 80000, engrais: 150000, pesticides: 40000, mainOeuvre: 120000 },
+    plantingDensity: 120000,
+    description: 'Aliment de base, marché garanti',
+    bestRegions: ['Bouaké', 'Korhogo', 'Ferkessédougou'],
+    rotationCompatible: ['mais', 'arachide', 'niebe']
   },
   {
     id: 'arachide',
     name: 'Arachide',
-    category: 'vivrier',
+    category: 'legumineuse',
     cycleMonths: 4,
     seasons: ['Hivernage'],
     unitType: 'sac',
     averageYieldPerHectare: 25,
-    averagePricePerUnit: 45000,
-    averageCostPerUnit: 25000,
-    description: 'Légumineuse riche en protéines'
+    regionalPrices: { min: 40000, max: 55000, average: 47500 },
+    productionCosts: { semences: 80000, engrais: 60000, pesticides: 25000, mainOeuvre: 120000 },
+    plantingDensity: 125000,
+    description: 'Légumineuse riche en protéines, améliore le sol',
+    bestRegions: ['Bouaké', 'Korhogo', 'Katiola'],
+    rotationCompatible: ['mais', 'riz', 'soja']
+  },
+  {
+    id: 'soja',
+    name: 'Soja',
+    category: 'legumineuse',
+    cycleMonths: 4,
+    seasons: ['Hivernage'],
+    unitType: 'sac',
+    averageYieldPerHectare: 20,
+    regionalPrices: { min: 45000, max: 65000, average: 55000 },
+    productionCosts: { semences: 60000, engrais: 40000, pesticides: 20000, mainOeuvre: 100000 },
+    plantingDensity: 400000,
+    description: 'Forte demande industrielle, enrichit le sol',
+    bestRegions: ['Bouaké', 'Katiola', 'Ferkessédougou'],
+    rotationCompatible: ['mais', 'riz', 'arachide']
+  },
+  {
+    id: 'niebe',
+    name: 'Niébé (Haricot)',
+    category: 'legumineuse',
+    cycleMonths: 3,
+    seasons: ['Hivernage', 'Post-hivernage'],
+    unitType: 'sac',
+    averageYieldPerHectare: 15,
+    regionalPrices: { min: 50000, max: 70000, average: 60000 },
+    productionCosts: { semences: 40000, engrais: 30000, pesticides: 15000, mainOeuvre: 80000 },
+    plantingDensity: 62500,
+    description: 'Haricot local, résistant à la sécheresse',
+    bestRegions: ['Korhogo', 'Ferkessédougou', 'Odienné'],
+    rotationCompatible: ['mais', 'riz', 'sesame']
+  },
+  {
+    id: 'sesame',
+    name: 'Sésame',
+    category: 'vivrier',
+    cycleMonths: 4,
+    seasons: ['Hivernage'],
+    unitType: 'sac',
+    averageYieldPerHectare: 8,
+    regionalPrices: { min: 80000, max: 120000, average: 100000 },
+    productionCosts: { semences: 20000, engrais: 40000, pesticides: 15000, mainOeuvre: 80000 },
+    plantingDensity: 200000,
+    description: 'Culture de rente, forte valeur ajoutée',
+    bestRegions: ['Korhogo', 'Ferkessédougou', 'Bondoukou'],
+    rotationCompatible: ['mais', 'arachide', 'niebe']
+  },
+
+  // Tubercules
+  {
+    id: 'manioc',
+    name: 'Manioc',
+    category: 'tubercule',
+    cycleMonths: 12,
+    seasons: ['Toute année'],
+    unitType: 'tonne',
+    averageYieldPerHectare: 15,
+    regionalPrices: { min: 70000, max: 90000, average: 80000 },
+    productionCosts: { semences: 120000, engrais: 40000, pesticides: 20000, mainOeuvre: 150000 },
+    plantingDensity: 10000,
+    description: 'Tubercule de sécurité alimentaire, transformation possible',
+    bestRegions: ['Toutes régions'],
+    rotationCompatible: ['mais', 'arachide', 'plantain']
+  },
+  {
+    id: 'igname',
+    name: 'Igname',
+    category: 'tubercule',
+    cycleMonths: 8,
+    seasons: ['Début hivernage'],
+    unitType: 'tonne',
+    averageYieldPerHectare: 12,
+    regionalPrices: { min: 110000, max: 140000, average: 125000 },
+    productionCosts: { semences: 200000, engrais: 80000, pesticides: 30000, mainOeuvre: 200000 },
+    plantingDensity: 10000,
+    description: 'Tubercule noble, forte valeur culturelle et commerciale',
+    bestRegions: ['Bouaké', 'Yamoussoukro', 'Daloa'],
+    rotationCompatible: ['mais', 'arachide', 'plantain']
+  },
+  {
+    id: 'plantain',
+    name: 'Plantain',
+    category: 'tubercule',
+    cycleMonths: 12,
+    seasons: ['Toute année'],
+    unitType: 'kg',
+    averageYieldPerHectare: 25000,
+    regionalPrices: { min: 150, max: 250, average: 200 },
+    productionCosts: { semences: 300000, engrais: 100000, pesticides: 50000, mainOeuvre: 250000 },
+    plantingDensity: 1600,
+    description: 'Culture pérenne, production continue, forte demande',
+    bestRegions: ['Abidjan', 'San-Pédro', 'Daloa'],
+    rotationCompatible: ['manioc', 'igname', 'banane']
+  },
+  {
+    id: 'banane-douce',
+    name: 'Banane Douce',
+    category: 'tubercule',
+    cycleMonths: 12,
+    seasons: ['Toute année'],
+    unitType: 'kg',
+    averageYieldPerHectare: 30000,
+    regionalPrices: { min: 200, max: 350, average: 275 },
+    productionCosts: { semences: 350000, engrais: 120000, pesticides: 60000, mainOeuvre: 280000 },
+    plantingDensity: 1600,
+    description: 'Fruit de dessert, marché urbain en croissance',
+    bestRegions: ['Abidjan', 'San-Pédro', 'Soubré'],
+    rotationCompatible: ['plantain', 'manioc', 'igname']
   }
 ];
 
@@ -142,18 +335,33 @@ export const AGRICULTURAL_SEASONS = [
   {
     name: 'Saison sèche',
     period: 'Novembre - Mars',
-    description: 'Période idéale pour le maraîchage irrigué'
+    description: 'Période idéale pour le maraîchage irrigué',
+    crops: ['oignon', 'tomate', 'salade', 'chou', 'carotte', 'concombre']
   },
   {
     name: 'Hivernage',
     period: 'Avril - Octobre', 
-    description: 'Saison des pluies pour les cultures pluviales'
+    description: 'Saison des pluies pour les cultures pluviales',
+    crops: ['mais', 'riz', 'arachide', 'soja', 'niebe', 'sesame', 'gombo', 'aubergine', 'piment', 'haricot-vert', 'manioc', 'igname']
   },
   {
     name: 'Post-hivernage',
     period: 'Septembre - Novembre',
-    description: 'Fin de saison des pluies'
+    description: 'Fin de saison des pluies, cultures de transition',
+    crops: ['gombo', 'aubergine', 'niebe', 'haricot-vert']
+  },
+  {
+    name: 'Début hivernage',
+    period: 'Mars - Mai',
+    description: 'Début des pluies, préparation des grandes cultures',
+    crops: ['tomate', 'salade', 'igname']
   }
+];
+
+export const IVORY_COAST_REGIONS = [
+  'Abidjan', 'Bouaké', 'Korhogo', 'San-Pédro', 'Yamoussoukro', 
+  'Daloa', 'Man', 'Ferkessédougou', 'Katiola', 'Odienné', 
+  'Bondoukou', 'Soubré', 'Gagnoa', 'Divo'
 ];
 
 export const AGRICULTURAL_EXPENSES_CI = [
@@ -174,10 +382,10 @@ export const AGRICULTURAL_EXPENSES_CI = [
 ];
 
 export const IVORY_COAST_TAX_RATES = {
-  corporateTaxRate: 25, // Impôt sur les sociétés en Côte d'Ivoire
-  vat: 18, // TVA ivoirienne
-  cnpsRate: 16.3, // Charges sociales CNPS (employeur)
-  cnpsEmployeeRate: 3.2, // Charges sociales CNPS (employé)
-  minimumWage: 60000, // SMIG ivoirien par mois
-  agricultureTaxExemption: true // Exonérations fiscales agriculture
+  corporateTaxRate: 25,
+  vat: 18,
+  cnpsRate: 16.3,
+  cnpsEmployeeRate: 3.2,
+  minimumWage: 60000,
+  agricultureTaxExemption: true
 };

@@ -1,14 +1,18 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Parcelle, CultureParcelle, ParcelleCalculations } from '@/types/parcelle';
+import { IVORY_COAST_CROPS, CropType } from '@/config/ivoryCoastAgriculture';
 
 interface ParcellesContextType {
   parcelles: Parcelle[];
   culturesParcelles: CultureParcelle[];
+  customCrops: CropType[];
   addParcelle: (parcelle: Omit<Parcelle, 'id' | 'dateCreation'>) => void;
   updateParcelle: (id: string, updates: Partial<Parcelle>) => void;
   removeParcelle: (id: string) => void;
   assignCultureToParcelle: (parcelleId: string, cultureId: string) => void;
+  addCustomCrop: (crop: Omit<CropType, 'id'>) => void;
+  getAllCrops: () => CropType[];
   calculateParcelleMetrics: (parcelleId: string) => ParcelleCalculations;
   getTotalMetrics: () => ParcelleCalculations;
 }
@@ -18,6 +22,7 @@ const ParcellesContext = createContext<ParcellesContextType | undefined>(undefin
 export const ParcellesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [parcelles, setParcelles] = useState<Parcelle[]>([]);
   const [culturesParcelles, setCulturesParcelles] = useState<CultureParcelle[]>([]);
+  const [customCrops, setCustomCrops] = useState<CropType[]>([]);
 
   const addParcelle = useCallback((parcelleData: Omit<Parcelle, 'id' | 'dateCreation'>) => {
     const newParcelle: Parcelle = {
@@ -41,13 +46,38 @@ export const ParcellesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     updateParcelle(parcelleId, { cultureId });
   }, [updateParcelle]);
 
+  const addCustomCrop = useCallback((cropData: Omit<CropType, 'id'>) => {
+    const newCrop: CropType = {
+      ...cropData,
+      id: `custom-${Date.now()}`
+    };
+    setCustomCrops(prev => [...prev, newCrop]);
+  }, []);
+
+  const getAllCrops = useCallback((): CropType[] => {
+    return [...IVORY_COAST_CROPS, ...customCrops];
+  }, [customCrops]);
+
   const calculateParcelleMetrics = useCallback((parcelleId: string): ParcelleCalculations => {
     const parcelle = parcelles.find(p => p.id === parcelleId);
     if (!parcelle) return { coutsTotaux: 0, revenus: 0, margeParHectare: 0, margeTotale: 0, rentabilite: 0 };
 
-    const coutsTotaux = parcelle.coutsPrepration + parcelle.coutsIntrants + 
-                       parcelle.coutsMainOeuvre + parcelle.autresCouts;
-    const revenus = parcelle.rendementAttendu * parcelle.surface;
+    const allCrops = getAllCrops();
+    const assignedCrop = allCrops.find(c => c.id === parcelle.cultureId);
+    
+    let coutsTotaux = parcelle.coutsPrepration + parcelle.coutsIntrants + 
+                     parcelle.coutsMainOeuvre + parcelle.autresCouts;
+    let revenus = parcelle.rendementAttendu * parcelle.surface;
+
+    // Si une culture est assignée, utiliser ses données pour les calculs automatiques
+    if (assignedCrop) {
+      const costPerHectare = Object.values(assignedCrop.productionCosts).reduce((sum, cost) => sum + cost, 0);
+      coutsTotaux = costPerHectare * parcelle.surface;
+      
+      const productionEstimee = assignedCrop.averageYieldPerHectare * parcelle.surface;
+      revenus = productionEstimee * assignedCrop.regionalPrices.average;
+    }
+
     const margeTotale = revenus - coutsTotaux;
     const margeParHectare = parcelle.surface > 0 ? margeTotale / parcelle.surface : 0;
     const rentabilite = coutsTotaux > 0 ? (margeTotale / coutsTotaux) * 100 : 0;
@@ -59,7 +89,7 @@ export const ParcellesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       margeTotale,
       rentabilite
     };
-  }, [parcelles]);
+  }, [parcelles, getAllCrops]);
 
   const getTotalMetrics = useCallback((): ParcelleCalculations => {
     return parcelles.reduce((total, parcelle) => {
@@ -77,10 +107,13 @@ export const ParcellesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const value: ParcellesContextType = {
     parcelles,
     culturesParcelles,
+    customCrops,
     addParcelle,
     updateParcelle,
     removeParcelle,
     assignCultureToParcelle,
+    addCustomCrop,
+    getAllCrops,
     calculateParcelleMetrics,
     getTotalMetrics
   };
