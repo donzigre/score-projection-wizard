@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,11 @@ import { useFinancialData, FixedAsset, FundingSource, WorkingCapitalItem } from 
 import { formatCurrency } from '@/utils/formatting';
 import { InfoCard } from '@/components/ui/InfoCard';
 
-const PointDepartSection = () => {
+interface PointDepartSectionProps {
+  onNavigateToAgricole?: () => void;
+}
+
+const PointDepartSection = ({ onNavigateToAgricole }: PointDepartSectionProps) => {
   const { data, updateFixedAssets, updateFundingSources, updateOperatingCapital } = useFinancialData();
   
   const [fixedAssets, setFixedAssets] = useState<FixedAsset[]>(data.fixedAssets);
@@ -142,7 +147,16 @@ const PointDepartSection = () => {
             </p>
             <Button 
               className="bg-green-600 hover:bg-green-700"
-              onClick={() => window.location.href = '/#point-depart-agricole'}
+              onClick={() => {
+                // Utiliser le parent pour changer d'onglet ou navigation par défaut
+                if (onNavigateToAgricole) {
+                  onNavigateToAgricole();
+                } else {
+                  // Fallback: essayer de déclencher un changement d'onglet
+                  const event = new CustomEvent('navigate-to-tab', { detail: 'point-depart-agricole' });
+                  window.dispatchEvent(event);
+                }
+              }}
             >
               Essayer le Point de Départ Agricole
             </Button>

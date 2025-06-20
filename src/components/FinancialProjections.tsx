@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ConfigurationSection from './sections/ConfigurationSection';
 import PointDepartSection from './sections/PointDepartSection';
+import PointDepartAgricoleSection from './sections/PointDepartAgricoleSection';
 import PrevisionsVentesSection from './sections/PrevisionsVentesSection';
 import MasseSalarialeSection from './sections/MasseSalarialeSection';
 import ParametresSupplementairesSection from './sections/ParametresSupplementairesSection';
@@ -23,9 +24,14 @@ import { ParcellesProvider } from '@/contexts/ParcellesContext';
 const FinancialProjections = () => {
   const [activeTab, setActiveTab] = useState("configuration");
 
+  const navigateToAgricole = () => {
+    setActiveTab("point-depart-agricole");
+  };
+
   const tabs = [
     { id: "configuration", label: "Configuration & Instructions", component: ConfigurationSection },
-    { id: "point-depart", label: "Point de Départ", component: PointDepartSection },
+    { id: "point-depart", label: "Point de Départ", component: () => <PointDepartSection onNavigateToAgricole={navigateToAgricole} /> },
+    { id: "point-depart-agricole", label: "Point de Départ Agricole", component: PointDepartAgricoleSection },
     { id: "gestion-parcelles", label: "Gestion Parcelles & Cultures", component: GestionParcellesCulturesSection },
     { id: "masse-salariale", label: "Masse Salariale Année 1", component: MasseSalarialeSection },
     { id: "previsions-ventes", label: "Prévisions de Ventes Année 1", component: PrevisionsVentesSection },
@@ -57,7 +63,7 @@ const FinancialProjections = () => {
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <div className="border-b border-gray-200 bg-gradient-to-r from-blue-500/5 to-green-500/5">
                   <TabsList className="h-auto p-2 bg-transparent w-full justify-start overflow-x-auto">
-                    {tabs.slice(0, 7).map((tab) => (
+                    {tabs.slice(0, 8).map((tab) => (
                       <TabsTrigger 
                         key={tab.id} 
                         value={tab.id}
@@ -71,7 +77,7 @@ const FinancialProjections = () => {
                 
                 <div className="border-b border-gray-100 bg-gradient-to-r from-green-500/5 to-blue-500/5">
                   <TabsList className="h-auto p-2 bg-transparent w-full justify-start overflow-x-auto">
-                    {tabs.slice(7).map((tab) => (
+                    {tabs.slice(8).map((tab) => (
                       <TabsTrigger 
                         key={tab.id} 
                         value={tab.id}
