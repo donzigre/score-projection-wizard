@@ -1,14 +1,25 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFinancialData } from '@/contexts/FinancialDataContext';
+import { useAutoSave } from '@/hooks/useAutoSave';
 import { InfoCard } from '@/components/ui/InfoCard';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { Save, Check, Loader2 } from 'lucide-react';
 
 const ConfigurationSection = () => {
   const { data, updateCompanyInfo } = useFinancialData();
+  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+  // Auto-sauvegarde (comme avant)
+  useAutoSave(data);
 
   const mois = [
     'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -17,6 +28,85 @@ const ConfigurationSection = () => {
 
   const anneeActuelle = new Date().getFullYear();
   const annees = Array.from({ length: 11 }, (_, i) => anneeActuelle - 5 + i);
+
+  const handleManualSave = async () => {
+    setIsSaving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        toast({
+          title: "Erreur d'authentification",
+          description: "Vous devez être connecté pour sauvegarder",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Vérifier si un projet existe déjà pour cet utilisateur
+      const { data: existingProjects } = await supabase
+        .from('financial_projects')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .limit(1);
+
+      if (existingProjects && existingProjects.length > 0) {
+        // Mettre à jour le projet existant
+        const { error } = await supabase
+          .from('financial_projects')
+          .update({
+            company_info: data.companyInfo,
+            fixed_assets: data.fixedAssets,
+            operating_capital: data.operatingCapital,
+            funding_sources: data.fundingSources,
+            products: data.products,
+            operating_expenses: data.operatingExpenses,
+            payroll_data: data.payrollData,
+            additional_parameters: data.additionalParameters,
+          })
+          .eq('id', existingProjects[0].id);
+
+        if (error) throw error;
+      } else {
+        // Créer un nouveau projet
+        const { error } = await supabase
+          .from('financial_projects')
+          .insert({
+            user_id: session.user.id,
+            project_name: data.companyInfo.companyName || 'Nouveau Projet',
+            company_info: data.companyInfo,
+            fixed_assets: data.fixedAssets,
+            operating_capital: data.operatingCapital,
+            funding_sources: data.fundingSources,
+            products: data.products,
+            operating_expenses: data.operatingExpenses,
+            payroll_data: data.payrollData,
+            additional_parameters: data.additionalParameters,
+          });
+
+        if (error) throw error;
+      }
+
+      setLastSaved(new Date());
+      toast({
+        title: "Projet sauvegardé",
+        description: "Vos données ont été sauvegardées avec succès",
+        variant: "default",
+      });
+
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast({
+        title: "Erreur de sauvegarde",
+        description: "Impossible de sauvegarder le projet",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const isFormValid = data.companyInfo.companyName && data.companyInfo.preparerName;
 
   return (
     <div className="space-y-6">
@@ -28,12 +118,20 @@ const ConfigurationSection = () => {
       <div className="grid md:grid-cols-2 gap-6">
         <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-white">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl text-blue-900">Détails de l'Entreprise</CardTitle>
+            <CardTitle className="text-xl text-blue-900 flex items-center justify-between">
+              Détails de l'Entreprise
+              {lastSaved && (
+                <div className="flex items-center text-sm text-green-600">
+                  <Check className="h-4 w-4 mr-1" />
+                  Sauvegardé à {lastSaved.toLocaleTimeString()}
+                </div>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="preparer-name" className="text-sm font-medium text-gray-700">
-                Nom du Préparateur
+                Nom du Préparateur *
               </Label>
               <Input
                 id="preparer-name"
@@ -41,12 +139,13 @@ const ConfigurationSection = () => {
                 onChange={(e) => updateCompanyInfo({ preparerName: e.target.value })}
                 className="mt-1 bg-blue-50 border-blue-200 focus:border-blue-500"
                 placeholder="Entrez votre nom"
+                required
               />
             </div>
 
             <div>
               <Label htmlFor="company-name" className="text-sm font-medium text-gray-700">
-                Nom de l'Entreprise
+                Nom de l'Entreprise *
               </Label>
               <Input
                 id="company-name"
@@ -54,6 +153,7 @@ const ConfigurationSection = () => {
                 onChange={(e) => updateCompanyInfo({ companyName: e.target.value })}
                 className="mt-1 bg-blue-50 border-blue-200 focus:border-blue-500"
                 placeholder="Entrez le nom de votre entreprise"
+                required
               />
             </div>
 
@@ -92,6 +192,27 @@ const ConfigurationSection = () => {
                 </Select>
               </div>
             </div>
+
+            <div className="flex space-x-2 pt-4">
+              <Button 
+                onClick={handleManualSave}
+                disabled={!isFormValid || isSaving}
+                className="flex items-center space-x-2"
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                <span>{isSaving ? 'Sauvegarde...' : 'Sauvegarder'}</span>
+              </Button>
+              
+              {!isFormValid && (
+                <p className="text-sm text-red-600 flex items-center">
+                  Veuillez remplir tous les champs obligatoires (*)
+                </p>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -106,7 +227,7 @@ const ConfigurationSection = () => {
               <p><strong>Étape 5 :</strong> Vérifiez tous les calculs et générez les rapports</p>
               <div className="mt-4 p-3 bg-blue-100 rounded-lg">
                 <p className="font-medium text-blue-900">💡 Conseil :</p>
-                <p className="text-blue-800">Le nom de votre entreprise apparaîtra automatiquement sur tous les états financiers et rapports.</p>
+                <p className="text-blue-800">Vos données sont sauvegardées automatiquement toutes les 2 secondes. Vous pouvez également sauvegarder manuellement.</p>
               </div>
             </div>
           }
