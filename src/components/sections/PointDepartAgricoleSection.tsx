@@ -96,7 +96,9 @@ const PointDepartAgricoleSection = () => {
   };
 
   const handleCultureAssignment = (parcelleId: string, cultureId: string | null) => {
-    assignCultureToParcelle(parcelleId, cultureId);
+    // Convertir "no-culture" en null pour la logique métier
+    const actualCultureId = cultureId === "no-culture" ? null : cultureId;
+    assignCultureToParcelle(parcelleId, actualCultureId);
     toast({
       title: "Succès",
       description: "Culture assignée à la parcelle avec succès.",
@@ -246,12 +248,15 @@ const PointDepartAgricoleSection = () => {
 
                       <div>
                         <Label htmlFor={`parcelle-culture-${parcelle.id}`}>Culture Assignée</Label>
-                        <Select onValueChange={(value) => handleCultureAssignment(parcelle.id, value)}>
+                        <Select 
+                          value={parcelle.cultureId || "no-culture"}
+                          onValueChange={(value) => handleCultureAssignment(parcelle.id, value)}
+                        >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Sélectionner une culture" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value={null}>Aucune culture</SelectItem>
+                            <SelectItem value="no-culture">Aucune culture</SelectItem>
                             {getAvailableCrops().map((crop) => (
                               <SelectItem key={crop.id} value={crop.id}>{crop.name}</SelectItem>
                             ))}
