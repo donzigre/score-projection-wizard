@@ -1,53 +1,111 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useFinancialData } from '@/contexts/FinancialDataContext';
-import { formatCurrency } from '@/utils/formatting';
-import { convertFundingSourcesToLegacy } from '@/utils/dataAdapters';
+import { useParcelles } from '@/contexts/ParcellesContext';
+import { useDataValidation } from '@/hooks/useDataValidation';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Calculator, TrendingUp } from 'lucide-react';
 
 const RatiosFinanciersSection = () => {
-  const { data, calculations } = useFinancialData();
+  const { data } = useFinancialData();
+  const { parcelles } = useParcelles();
+  const { canGenerateReports, hasCompanyInfo } = useDataValidation();
+
+  if (!hasCompanyInfo) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Analyse des Ratios Financiers</h2>
+          <p className="text-gray-600">Indicateurs clés de performance et de santé financière</p>
+        </div>
+
+        <EmptyState
+          title="Configuration requise"
+          description="Veuillez d'abord configurer les informations de votre entreprise pour voir les ratios financiers."
+          actionText="Aller à la Configuration"
+          onAction={() => console.log('Navigate to configuration')}
+          icon={<Calculator className="h-12 w-12" />}
+        />
+      </div>
+    );
+  }
+
+  if (!canGenerateReports || parcelles.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Analyse des Ratios Financiers</h2>
+          <p className="text-gray-600">Indicateurs clés de performance et de santé financière</p>
+        </div>
+
+        <EmptyState
+          title="Données de parcelles requises"
+          description="Pour analyser les ratios financiers, vous devez d'abord créer des parcelles et leur assigner des cultures."
+          actionText="Gérer les Parcelles"
+          onAction={() => console.log('Navigate to parcelles')}
+          icon={<TrendingUp className="h-12 w-12" />}
+        />
+      </div>
+    );
+  }
 
   const calculateFinancialRatios = () => {
-    const legacyFundingSources = convertFundingSourcesToLegacy(data.fundingSources);
+    // Calculs basés sur les données réelles des parcelles
+    const totalCapital = data.fundingSources.reduce((sum, source) => sum + source.amount, 0);
+    const totalAssets = data.fixedAssets.reduce((sum, asset) => sum + (asset.quantity * asset.unitPrice), 0);
     
-    // Ratios de structure
-    const totalCapital = calculations.totalFundingSources;
-    const equity = legacyFundingSources.ownersEquityAmount || 100000;
+    if (totalCapital === 0 || totalAssets === 0) {
+      return [];
+    }
+
+    const equity = totalCapital * 0.6; // Estimation
     const debt = totalCapital - equity;
     
     const debtToEquityRatio = equity > 0 ? debt / equity : 0;
     const equityRatio = totalCapital > 0 ? equity / totalCapital : 0;
     
-    // Ratios de liquidité (BFR)
-    const stockRotation = 50; // Jours
-    const clientRotation = 30; // Jours
-    const fournisseurRotation = 45; // Jours
+    // Calculs basés sur les revenus réels des parcelles
+    const totalRevenue = parcelles.reduce((sum, parcelle) => {
+      const product = data.products.find(p => p.id === parcelle.cultureId);
+      if (product) {
+        return sum + (product.unitsPerMonth * product.pricePerUnit * 12);
+      }
+      return sum;
+    }, 0);
     
-    const bfrEnJours = stockRotation + clientRotation - fournisseurRotation;
-    
-    // Ratios de rentabilité
-    const chiffreAffaires = data.products?.reduce((total, product) => {
-      return total + (product.unitsPerMonth * product.pricePerUnit * 12);
-    }, 0) || 0;
-    const resultatNet = chiffreAffaires * 0.1; // Hypothèse de 10% de marge nette
-    
-    const margeNette = chiffreAffaires > 0 ? resultatNet / chiffreAffaires : 0;
-    const rentabiliteFondsPropres = equity > 0 ? resultatNet / equity : 0;
-    const levierFinancier = equity > 0 ? debt / equity : 0;
+    const margeNette = totalRevenue > 0 ? totalRevenue * 0.15 : 0;
+    const rentabiliteFondsPropres = equity > 0 ? margeNette / equity : 0;
     
     return [
       { name: 'Endettement / Fonds Propres', value: debtToEquityRatio, target: 1.5 },
       { name: 'Autonomie Financière', value: equityRatio, target: 0.4 },
-      { name: 'BFR (jours de CA)', value: bfrEnJours, target: 45 },
-      { name: 'Marge Nette', value: margeNette, target: 0.15 },
-      { name: 'Rentabilité Fonds Propres', value: rentabiliteFondsPropres, target: 0.1 },
-      { name: 'Effet de levier', value: levierFinancier, target: 0.5 }
+      { name: 'Marge Nette', value: margeNette / totalRevenue, target: 0.15 },
+      { name: 'Rentabilité Fonds Propres', value: rentabiliteFondsPropres, target: 0.1 }
     ];
   };
 
   const ratios = calculateFinancialRatios();
+
+  if (ratios.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Analyse des Ratios Financiers</h2>
+          <p className="text-gray-600">Indicateurs clés de performance et de santé financière</p>
+        </div>
+
+        <EmptyState
+          title="Données financières insuffisantes"
+          description="Pour calculer les ratios financiers, vous devez configurer vos sources de financement et actifs fixes."
+          actionText="Point de Départ"
+          onAction={() => console.log('Navigate to starting point')}
+          icon={<Calculator className="h-12 w-12" />}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -69,7 +127,6 @@ const RatiosFinanciersSection = () => {
               <Tooltip formatter={(value) => typeof value === 'number' ? value.toFixed(2) : String(value)} />
               <Legend />
               <Bar dataKey="value" fill="#8884d8" name="Ratio" />
-              <Line dataKey="target" stroke="red" name="Cible" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

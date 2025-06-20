@@ -2,46 +2,31 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, MapPin, Calculator } from "lucide-react";
+import { Plus, Trash2, MapPin, Calculator, Edit } from "lucide-react";
 import { useParcelles } from '@/contexts/ParcellesContext';
 import { useFinancialData } from '@/contexts/FinancialDataContext';
 import { formatCurrency } from '@/utils/formatting';
-import { Parcelle } from '@/types/parcelle';
+import { ParcelleForm } from '@/components/forms/ParcelleForm';
 
 const GestionParcellesSection = () => {
   const { parcelles, addParcelle, updateParcelle, removeParcelle, assignCultureToParcelle, calculateParcelleMetrics, getTotalMetrics } = useParcelles();
   const { data } = useFinancialData();
-  const [newParcelleData, setNewParcelleData] = useState({
-    nom: '',
-    surface: 0,
-    coutsPrepration: 0,
-    coutsIntrants: 0,
-    coutsMainOeuvre: 0,
-    autresCouts: 0,
-    rendementAttendu: 0
-  });
+  const [showForm, setShowForm] = useState(false);
+  const [editingParcelle, setEditingParcelle] = useState<string | null>(null);
 
-  const handleAddParcelle = () => {
-    if (newParcelleData.nom && newParcelleData.surface > 0) {
-      addParcelle({
-        ...newParcelleData,
-        cultureId: null,
-        statut: 'preparee',
-        notes: ''
-      });
-      setNewParcelleData({
-        nom: '',
-        surface: 0,
-        coutsPrepration: 0,
-        coutsIntrants: 0,
-        coutsMainOeuvre: 0,
-        autresCouts: 0,
-        rendementAttendu: 0
-      });
-    }
+  const handleAddParcelle = (parcelleData: any) => {
+    addParcelle({
+      ...parcelleData,
+      statut: 'preparee',
+      notes: ''
+    });
+    setShowForm(false);
+  };
+
+  const handleEditParcelle = (id: string, updates: any) => {
+    updateParcelle(id, updates);
+    setEditingParcelle(null);
   };
 
   const totalMetrics = getTotalMetrics();
@@ -53,7 +38,7 @@ const GestionParcellesSection = () => {
         <p className="text-gray-600">Gérez vos parcelles et calculez la rentabilité par culture</p>
       </div>
 
-      {/* Résumé Total */}
+      {/* Résumé Global de la Plantation */}
       <Card className="bg-gradient-to-r from-green-900 to-blue-900 text-white">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -85,146 +70,202 @@ const GestionParcellesSection = () => {
         </CardContent>
       </Card>
 
-      {/* Ajout de nouvelle parcelle */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            Nouvelle Parcelle
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-4 gap-4">
-            <div>
-              <Label>Nom de la parcelle</Label>
-              <Input
-                value={newParcelleData.nom}
-                onChange={(e) => setNewParcelleData(prev => ({ ...prev, nom: e.target.value }))}
-                placeholder="ex: Parcelle Nord"
-              />
-            </div>
-            <div>
-              <Label>Surface (hectares)</Label>
-              <Input
-                type="number"
-                step="0.1"
-                value={newParcelleData.surface || ''}
-                onChange={(e) => setNewParcelleData(prev => ({ ...prev, surface: parseFloat(e.target.value) || 0 }))}
-                placeholder="2.5"
-              />
-            </div>
-            <div>
-              <Label>Coûts préparation (FCFA)</Label>
-              <Input
-                type="number"
-                value={newParcelleData.coutsPrepration || ''}
-                onChange={(e) => setNewParcelleData(prev => ({ ...prev, coutsPrepration: parseFloat(e.target.value) || 0 }))}
-                placeholder="500000"
-              />
-            </div>
-            <div className="flex items-end">
-              <Button onClick={handleAddParcelle} className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Liste des parcelles */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {parcelles.map((parcelle) => {
-          const metrics = calculateParcelleMetrics(parcelle.id);
-          const assignedProduct = data.products.find(p => p.id === parcelle.cultureId);
-          
-          return (
-            <Card key={parcelle.id} className="border-l-4 border-l-green-500">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-green-600" />
-                  <CardTitle className="text-lg">{parcelle.nom}</CardTitle>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => removeParcelle(parcelle.id)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <Label className="text-gray-600">Surface</Label>
-                    <p className="font-medium">{parcelle.surface} hectares</p>
-                  </div>
-                  <div>
-                    <Label className="text-gray-600">Statut</Label>
-                    <p className="font-medium capitalize">{parcelle.statut.replace('_', ' ')}</p>
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-gray-600">Culture assignée</Label>
-                  <Select
-                    value={parcelle.cultureId || ''}
-                    onValueChange={(value) => assignCultureToParcelle(parcelle.id, value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choisir une culture" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Aucune culture</SelectItem>
-                      {data.products.map((product) => (
-                        <SelectItem key={product.id} value={product.id}>
-                          {product.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {assignedProduct && (
-                  <div className="bg-green-50 p-3 rounded-lg">
-                    <h4 className="font-medium text-green-900 mb-2">Calculs pour {assignedProduct.name}</h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Coûts totaux:</span>
-                        <span className="font-medium">{formatCurrency(metrics.coutsTotaux)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Revenus attendus:</span>
-                        <span className="font-medium">{formatCurrency(metrics.revenus)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Marge/hectare:</span>
-                        <span className="font-medium">{formatCurrency(metrics.margeParHectare)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Rentabilité:</span>
-                        <span className={`font-medium ${metrics.rentabilite >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {metrics.rentabilite.toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+      {/* Actions rapides */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-lg font-semibold">Vos Parcelles ({parcelles.length})</h3>
+          <p className="text-gray-600">Cliquez sur "Nouvelle Parcelle" pour commencer</p>
+        </div>
+        <Button 
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Nouvelle Parcelle
+        </Button>
       </div>
 
-      {parcelles.length === 0 && (
+      {/* Formulaire de nouvelle parcelle */}
+      {showForm && (
+        <ParcelleForm
+          onSubmit={handleAddParcelle}
+          onCancel={() => setShowForm(false)}
+        />
+      )}
+
+      {/* Liste des parcelles */}
+      {parcelles.length === 0 ? (
         <Card className="text-center py-12">
           <CardContent>
             <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune parcelle</h3>
-            <p className="text-gray-600">Ajoutez votre première parcelle pour commencer à gérer votre exploitation</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune parcelle créée</h3>
+            <p className="text-gray-600 mb-4">
+              Commencez par ajouter votre première parcelle pour gérer votre exploitation agricole
+            </p>
+            <Button 
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 mx-auto"
+            >
+              <Plus className="h-4 w-4" />
+              Créer ma première parcelle
+            </Button>
           </CardContent>
         </Card>
+      ) : (
+        <div className="grid lg:grid-cols-2 gap-6">
+          {parcelles.map((parcelle) => {
+            const metrics = calculateParcelleMetrics(parcelle.id);
+            const assignedProduct = data.products.find(p => p.id === parcelle.cultureId);
+            const isEditing = editingParcelle === parcelle.id;
+            
+            if (isEditing) {
+              return (
+                <ParcelleForm
+                  key={parcelle.id}
+                  title={`Modifier ${parcelle.nom}`}
+                  initialData={{
+                    nom: parcelle.nom,
+                    surface: parcelle.surface,
+                    coutsPrepration: parcelle.coutsPrepration,
+                    coutsIntrants: parcelle.coutsIntrants,
+                    coutsMainOeuvre: parcelle.coutsMainOeuvre,
+                    autresCouts: parcelle.autresCouts,
+                    rendementAttendu: parcelle.rendementAttendu,
+                    cultureId: parcelle.cultureId || ''
+                  }}
+                  onSubmit={(data) => handleEditParcelle(parcelle.id, data)}
+                  onCancel={() => setEditingParcelle(null)}
+                />
+              );
+            }
+            
+            return (
+              <Card key={parcelle.id} className="border-l-4 border-l-green-500">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-green-600" />
+                    <CardTitle className="text-lg">{parcelle.nom}</CardTitle>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingParcelle(parcelle.id)}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeParcelle(parcelle.id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-600">Surface</p>
+                      <p className="font-medium">{parcelle.surface} hectares</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Statut</p>
+                      <p className="font-medium capitalize">{parcelle.statut.replace('_', ' ')}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-600 text-sm mb-1">Culture assignée</p>
+                    <Select
+                      value={parcelle.cultureId || ''}
+                      onValueChange={(value) => assignCultureToParcelle(parcelle.id, value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choisir une culture" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Aucune culture</SelectItem>
+                        {data.products.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Résumé des coûts */}
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-2">Coûts de Production</h4>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Préparation:</span>
+                        <span>{formatCurrency(parcelle.coutsPrepration)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Intrants:</span>
+                        <span>{formatCurrency(parcelle.coutsIntrants)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Main d'œuvre:</span>
+                        <span>{formatCurrency(parcelle.coutsMainOeuvre)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Autres:</span>
+                        <span>{formatCurrency(parcelle.autresCouts)}</span>
+                      </div>
+                    </div>
+                    <div className="border-t mt-2 pt-2">
+                      <div className="flex justify-between font-medium">
+                        <span>Total:</span>
+                        <span>{formatCurrency(metrics.coutsTotaux)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {assignedProduct && (
+                    <div className="bg-green-50 p-3 rounded-lg">
+                      <h4 className="font-medium text-green-900 mb-2">Calculs pour {assignedProduct.name}</h4>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Revenus attendus:</span>
+                          <span className="font-medium">{formatCurrency(metrics.revenus)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Marge totale:</span>
+                          <span className={`font-medium ${metrics.margeTotale >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {formatCurrency(metrics.margeTotale)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Marge/hectare:</span>
+                          <span className="font-medium">{formatCurrency(metrics.margeParHectare)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Rentabilité:</span>
+                          <span className={`font-medium ${metrics.rentabilite >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {metrics.rentabilite.toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {!assignedProduct && (
+                    <div className="bg-orange-50 p-3 rounded-lg">
+                      <p className="text-orange-800 text-sm">
+                        💡 Assignez une culture à cette parcelle pour voir les calculs de rentabilité
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       )}
     </div>
   );
