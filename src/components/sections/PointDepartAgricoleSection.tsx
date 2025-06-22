@@ -96,6 +96,7 @@ const PointDepartAgricoleSection = () => {
   };
 
   const handleCultureAssignment = (parcelleId: string, cultureId: string | null) => {
+    console.log('Culture assignment called with:', { parcelleId, cultureId });
     // Convertir "no-culture" en null pour la logique métier
     const actualCultureId = cultureId === "no-culture" ? null : cultureId;
     assignCultureToParcelle(parcelleId, actualCultureId);
@@ -105,21 +106,32 @@ const PointDepartAgricoleSection = () => {
     });
   };
 
-  const getAvailableCrops = useCallback(() => {
+  const getValidatedCrops = useCallback(() => {
     const crops = getAllCrops();
+    console.log('Raw crops from getAllCrops:', crops);
+    
     // Filter out any crops with empty, null, or undefined IDs to prevent Select errors
     const validCrops = crops.filter(crop => {
       if (!crop || !crop.id) {
         console.warn('Found crop with no id:', crop);
         return false;
       }
-      if (typeof crop.id !== 'string' || crop.id.trim() === '') {
-        console.warn('Found crop with empty or invalid id:', crop);
+      if (typeof crop.id !== 'string') {
+        console.warn('Found crop with non-string id:', crop);
+        return false;
+      }
+      if (crop.id.trim() === '') {
+        console.warn('Found crop with empty id:', crop);
+        return false;
+      }
+      if (!crop.name || typeof crop.name !== 'string' || crop.name.trim() === '') {
+        console.warn('Found crop with invalid name:', crop);
         return false;
       }
       return true;
     });
-    console.log('Available crops after filtering:', validCrops);
+    
+    console.log('Valid crops after filtering:', validCrops);
     return validCrops;
   }, [getAllCrops]);
 
@@ -135,7 +147,7 @@ const PointDepartAgricoleSection = () => {
   };
 
   const getAssignedCrop = (parcelle: Parcelle) => {
-    return parcelle.cultureId ? getAvailableCrops().find(c => c.id === parcelle.cultureId) : null;
+    return parcelle.cultureId ? getValidatedCrops().find(c => c.id === parcelle.cultureId) : null;
   };
 
   return (
@@ -264,19 +276,23 @@ const PointDepartAgricoleSection = () => {
                         <Label htmlFor={`parcelle-culture-${parcelle.id}`}>Culture Assignée</Label>
                         <Select 
                           value={parcelle.cultureId || "no-culture"}
-                          onValueChange={(value) => handleCultureAssignment(parcelle.id, value)}
+                          onValueChange={(value) => {
+                            console.log('Select onValueChange called with value:', value);
+                            handleCultureAssignment(parcelle.id, value);
+                          }}
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Sélectionner une culture" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="no-culture">Aucune culture</SelectItem>
-                            {getAvailableCrops().map((crop) => {
-                              // Ensure crop.id is valid before rendering
+                            {getValidatedCrops().map((crop) => {
+                              // Double check that crop.id is valid before rendering
                               if (!crop?.id || typeof crop.id !== 'string' || crop.id.trim() === '') {
-                                console.warn('Skipping invalid crop:', crop);
+                                console.error('Attempting to render SelectItem with invalid crop:', crop);
                                 return null;
                               }
+                              console.log('Rendering SelectItem for crop:', crop.id, crop.name);
                               return (
                                 <SelectItem key={crop.id} value={crop.id}>
                                   {crop.name || 'Culture sans nom'}

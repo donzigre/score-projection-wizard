@@ -36,6 +36,25 @@ const PointDepartSection = ({ onNavigateToAgricole }: PointDepartSectionProps) =
     }
   };
 
+  // Define valid categories to prevent empty string values - with validation
+  const getValidAssetCategories = () => {
+    const categories = ['Terrain', 'Équipement', 'Bâtiment', 'Véhicule'];
+    console.log('Asset categories:', categories);
+    return categories.filter(cat => cat && cat.trim() !== '');
+  };
+
+  const getValidFundingTypes = () => {
+    const types = ['Apport personnel', 'Prêt bancaire agricole', 'Microfinance', 'Subvention', 'Prêt familial', 'Autre'];
+    console.log('Funding types:', types);
+    return types.filter(type => type && type.trim() !== '');
+  };
+
+  const getValidWorkingCapitalCategories = () => {
+    const categories = ['Semences', 'Engrais et intrants', 'Main-d\'œuvre', 'Fonds de roulement', 'Réserve climatique', 'Autre'];
+    console.log('Working capital categories:', categories);
+    return categories.filter(cat => cat && cat.trim() !== '');
+  };
+
   const addFixedAsset = () => {
     const newAsset: FixedAsset = {
       id: Date.now().toString(),
@@ -61,6 +80,7 @@ const PointDepartSection = ({ onNavigateToAgricole }: PointDepartSectionProps) =
   };
 
   const updateFixedAsset = (id: string, field: keyof FixedAsset, value: any) => {
+    console.log('Updating fixed asset:', id, field, value);
     const updated = fixedAssets.map(asset => 
       asset.id === id ? { ...asset, [field]: value } : asset
     );
@@ -89,6 +109,7 @@ const PointDepartSection = ({ onNavigateToAgricole }: PointDepartSectionProps) =
   };
 
   const updateFundingSource = (id: string, field: keyof FundingSource, value: any) => {
+    console.log('Updating funding source:', id, field, value);
     const updated = fundingSources.map(source => 
       source.id === id ? { ...source, [field]: value } : source
     );
@@ -115,6 +136,7 @@ const PointDepartSection = ({ onNavigateToAgricole }: PointDepartSectionProps) =
   };
 
   const updateWorkingCapitalItem = (id: string, field: keyof WorkingCapitalItem, value: any) => {
+    console.log('Updating working capital item:', id, field, value);
     const updated = workingCapital.map(item => 
       item.id === id ? { ...item, [field]: value } : item
     );
@@ -125,11 +147,6 @@ const PointDepartSection = ({ onNavigateToAgricole }: PointDepartSectionProps) =
   const getTotalFixedAssets = () => fixedAssets.reduce((total, asset) => total + (asset.quantity * asset.unitPrice), 0);
   const getTotalFunding = () => fundingSources.reduce((total, source) => total + source.amount, 0);
   const getTotalWorkingCapital = () => workingCapital.reduce((total, item) => total + item.amount, 0);
-
-  // Define valid categories to prevent empty string values
-  const assetCategories = ['Terrain', 'Équipement', 'Bâtiment', 'Véhicule'];
-  const fundingTypes = ['Apport personnel', 'Prêt bancaire agricole', 'Microfinance', 'Subvention', 'Prêt familial', 'Autre'];
-  const workingCapitalCategories = ['Semences', 'Engrais et intrants', 'Main-d\'œuvre', 'Fonds de roulement', 'Réserve climatique', 'Autre'];
 
   return (
     <div className="space-y-6">
@@ -252,13 +269,16 @@ const PointDepartSection = ({ onNavigateToAgricole }: PointDepartSectionProps) =
                 <div className="col-span-2">
                   <Select
                     value={asset.category}
-                    onValueChange={(value) => updateFixedAsset(asset.id, 'category', value)}
+                    onValueChange={(value) => {
+                      console.log('Asset category change:', value);
+                      updateFixedAsset(asset.id, 'category', value);
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {assetCategories.map((category) => (
+                      {getValidAssetCategories().map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
                         </SelectItem>
@@ -329,13 +349,16 @@ const PointDepartSection = ({ onNavigateToAgricole }: PointDepartSectionProps) =
                 <div className="col-span-3">
                   <Select
                     value={item.category}
-                    onValueChange={(value) => updateWorkingCapitalItem(item.id, 'category', value)}
+                    onValueChange={(value) => {
+                      console.log('Working capital category change:', value);
+                      updateWorkingCapitalItem(item.id, 'category', value);
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {workingCapitalCategories.map((category) => (
+                      {getValidWorkingCapitalCategories().map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
                         </SelectItem>
@@ -397,13 +420,16 @@ const PointDepartSection = ({ onNavigateToAgricole }: PointDepartSectionProps) =
                 <div className="col-span-3">
                   <Select
                     value={source.type}
-                    onValueChange={(value) => updateFundingSource(source.id, 'type', value)}
+                    onValueChange={(value) => {
+                      console.log('Funding type change:', value);
+                      updateFundingSource(source.id, 'type', value);
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {fundingTypes.map((type) => (
+                      {getValidFundingTypes().map((type) => (
                         <SelectItem key={type} value={type}>
                           {type}
                         </SelectItem>
