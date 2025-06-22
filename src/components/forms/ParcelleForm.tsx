@@ -41,7 +41,7 @@ export const ParcelleForm: React.FC<ParcelleFormProps> = ({
     coutsMainOeuvre: initialData.coutsMainOeuvre || 0,
     autresCouts: initialData.autresCouts || 0,
     rendementAttendu: initialData.rendementAttendu || 0,
-    cultureId: initialData.cultureId || ''
+    cultureId: initialData.cultureId || 'no-culture'
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -49,7 +49,7 @@ export const ParcelleForm: React.FC<ParcelleFormProps> = ({
     if (formData.nom && formData.surface > 0) {
       onSubmit({
         ...formData,
-        cultureId: formData.cultureId || null
+        cultureId: formData.cultureId === 'no-culture' ? null : formData.cultureId
       });
     }
   };
@@ -59,6 +59,17 @@ export const ParcelleForm: React.FC<ParcelleFormProps> = ({
   };
 
   const isValid = formData.nom.trim() && formData.surface > 0;
+
+  // Filter products to ensure valid data
+  const validProducts = data.products.filter(product => 
+    product && 
+    product.id && 
+    typeof product.id === 'string' && 
+    product.id.trim() !== '' &&
+    product.name &&
+    typeof product.name === 'string' &&
+    product.name.trim() !== ''
+  );
 
   return (
     <Card>
@@ -110,8 +121,8 @@ export const ParcelleForm: React.FC<ParcelleFormProps> = ({
                 <SelectValue placeholder="Choisir une culture (optionnel)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucune culture pour le moment</SelectItem>
-                {data.products.map((product) => (
+                <SelectItem value="no-culture">Aucune culture pour le moment</SelectItem>
+                {validProducts.map((product) => (
                   <SelectItem key={product.id} value={product.id}>
                     {product.name}
                   </SelectItem>

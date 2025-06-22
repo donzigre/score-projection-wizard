@@ -29,6 +29,23 @@ const GestionParcellesSection = () => {
     setEditingParcelle(null);
   };
 
+  const handleCultureAssignment = (parcelleId: string, cultureId: string) => {
+    // Convertir "no-culture" en null pour la logique métier
+    const actualCultureId = cultureId === "no-culture" ? null : cultureId;
+    assignCultureToParcelle(parcelleId, actualCultureId);
+  };
+
+  // Filter products to ensure valid data
+  const validProducts = data.products.filter(product => 
+    product && 
+    product.id && 
+    typeof product.id === 'string' && 
+    product.id.trim() !== '' &&
+    product.name &&
+    typeof product.name === 'string' &&
+    product.name.trim() !== ''
+  );
+
   const totalMetrics = getTotalMetrics();
 
   return (
@@ -115,7 +132,7 @@ const GestionParcellesSection = () => {
         <div className="grid lg:grid-cols-2 gap-6">
           {parcelles.map((parcelle) => {
             const metrics = calculateParcelleMetrics(parcelle.id);
-            const assignedProduct = data.products.find(p => p.id === parcelle.cultureId);
+            const assignedProduct = validProducts.find(p => p.id === parcelle.cultureId);
             const isEditing = editingParcelle === parcelle.id;
             
             if (isEditing) {
@@ -131,7 +148,7 @@ const GestionParcellesSection = () => {
                     coutsMainOeuvre: parcelle.coutsMainOeuvre,
                     autresCouts: parcelle.autresCouts,
                     rendementAttendu: parcelle.rendementAttendu,
-                    cultureId: parcelle.cultureId || ''
+                    cultureId: parcelle.cultureId || 'no-culture'
                   }}
                   onSubmit={(data) => handleEditParcelle(parcelle.id, data)}
                   onCancel={() => setEditingParcelle(null)}
@@ -180,15 +197,15 @@ const GestionParcellesSection = () => {
                   <div>
                     <p className="text-gray-600 text-sm mb-1">Culture assignée</p>
                     <Select
-                      value={parcelle.cultureId || ''}
-                      onValueChange={(value) => assignCultureToParcelle(parcelle.id, value)}
+                      value={parcelle.cultureId || 'no-culture'}
+                      onValueChange={(value) => handleCultureAssignment(parcelle.id, value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Choisir une culture" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Aucune culture</SelectItem>
-                        {data.products.map((product) => (
+                        <SelectItem value="no-culture">Aucune culture</SelectItem>
+                        {validProducts.map((product) => (
                           <SelectItem key={product.id} value={product.id}>
                             {product.name}
                           </SelectItem>
