@@ -108,8 +108,18 @@ const PointDepartAgricoleSection = () => {
   const getAvailableCrops = useCallback(() => {
     const crops = getAllCrops();
     // Filter out any crops with empty, null, or undefined IDs to prevent Select errors
-    const validCrops = crops.filter(crop => crop && crop.id && crop.id.trim() !== '');
-    console.log('Available crops:', validCrops);
+    const validCrops = crops.filter(crop => {
+      if (!crop || !crop.id) {
+        console.warn('Found crop with no id:', crop);
+        return false;
+      }
+      if (typeof crop.id !== 'string' || crop.id.trim() === '') {
+        console.warn('Found crop with empty or invalid id:', crop);
+        return false;
+      }
+      return true;
+    });
+    console.log('Available crops after filtering:', validCrops);
     return validCrops;
   }, [getAllCrops]);
 
@@ -262,13 +272,15 @@ const PointDepartAgricoleSection = () => {
                           <SelectContent>
                             <SelectItem value="no-culture">Aucune culture</SelectItem>
                             {getAvailableCrops().map((crop) => {
-                              // Additional safety check before rendering
-                              if (!crop || !crop.id || crop.id.trim() === '') {
-                                console.warn('Invalid crop found:', crop);
+                              // Ensure crop.id is valid before rendering
+                              if (!crop?.id || typeof crop.id !== 'string' || crop.id.trim() === '') {
+                                console.warn('Skipping invalid crop:', crop);
                                 return null;
                               }
                               return (
-                                <SelectItem key={crop.id} value={crop.id}>{crop.name}</SelectItem>
+                                <SelectItem key={crop.id} value={crop.id}>
+                                  {crop.name || 'Culture sans nom'}
+                                </SelectItem>
                               );
                             })}
                           </SelectContent>

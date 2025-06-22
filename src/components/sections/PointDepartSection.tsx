@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -127,6 +126,11 @@ const PointDepartSection = ({ onNavigateToAgricole }: PointDepartSectionProps) =
   const getTotalFunding = () => fundingSources.reduce((total, source) => total + source.amount, 0);
   const getTotalWorkingCapital = () => workingCapital.reduce((total, item) => total + item.amount, 0);
 
+  // Define valid categories to prevent empty string values
+  const assetCategories = ['Terrain', 'Équipement', 'Bâtiment', 'Véhicule'];
+  const fundingTypes = ['Apport personnel', 'Prêt bancaire agricole', 'Microfinance', 'Subvention', 'Prêt familial', 'Autre'];
+  const workingCapitalCategories = ['Semences', 'Engrais et intrants', 'Main-d\'œuvre', 'Fonds de roulement', 'Réserve climatique', 'Autre'];
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
@@ -254,10 +258,11 @@ const PointDepartSection = ({ onNavigateToAgricole }: PointDepartSectionProps) =
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Terrain">Terrain</SelectItem>
-                      <SelectItem value="Équipement">Équipement</SelectItem>
-                      <SelectItem value="Bâtiment">Bâtiment</SelectItem>
-                      <SelectItem value="Véhicule">Véhicule</SelectItem>
+                      {assetCategories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -330,12 +335,11 @@ const PointDepartSection = ({ onNavigateToAgricole }: PointDepartSectionProps) =
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Semences">Semences</SelectItem>
-                      <SelectItem value="Engrais et intrants">Engrais et intrants</SelectItem>
-                      <SelectItem value="Main-d'œuvre">Main-d'œuvre</SelectItem>
-                      <SelectItem value="Fonds de roulement">Fonds de roulement</SelectItem>
-                      <SelectItem value="Réserve climatique">Réserve climatique</SelectItem>
-                      <SelectItem value="Autre">Autre</SelectItem>
+                      {workingCapitalCategories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -399,12 +403,11 @@ const PointDepartSection = ({ onNavigateToAgricole }: PointDepartSectionProps) =
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Apport personnel">Apport personnel</SelectItem>
-                      <SelectItem value="Prêt bancaire agricole">Prêt bancaire agricole</SelectItem>
-                      <SelectItem value="Microfinance">Microfinance</SelectItem>
-                      <SelectItem value="Subvention">Subvention</SelectItem>
-                      <SelectItem value="Prêt familial">Prêt familial</SelectItem>
-                      <SelectItem value="Autre">Autre</SelectItem>
+                      {fundingTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
