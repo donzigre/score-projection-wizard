@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,9 +62,31 @@ const GestionParcellesCulturesSection = () => {
     return crop.averageYieldPerHectare * surface;
   };
 
-  const handleAssignCulture = (parcelleId: string, cropId: string) => {
+  // Filter crops to ensure valid data - CRITICAL FIX for Select.Item error
+  const getValidCrops = () => {
     const allCrops = getAllCrops();
-    const selectedCrop = allCrops.find(c => c.id === cropId);
+    return allCrops.filter(crop => 
+      crop && 
+      crop.id && 
+      typeof crop.id === 'string' && 
+      crop.id.trim() !== '' &&
+      crop.name &&
+      typeof crop.name === 'string' &&
+      crop.name.trim() !== ''
+    );
+  };
+
+  const handleAssignCulture = (parcelleId: string, cropId: string) => {
+    console.log('handleAssignCulture called with:', { parcelleId, cropId });
+    
+    // CRITICAL FIX: Handle the "no-culture" case properly
+    if (cropId === 'no-culture' || !cropId) {
+      updateParcelle(parcelleId, { cultureId: null });
+      return;
+    }
+
+    const validCrops = getValidCrops();
+    const selectedCrop = validCrops.find(c => c.id === cropId);
     const parcelle = parcelles.find(p => p.id === parcelleId);
     
     if (selectedCrop && parcelle) {
@@ -125,8 +148,8 @@ const GestionParcellesCulturesSection = () => {
     const assignedProduct = data.products.find(p => p.parcelleId === parcelleId);
     
     if (parcelle && assignedProduct && assignedProduct.cropId) {
-      const allCrops = getAllCrops();
-      const crop = allCrops.find(c => c.id === assignedProduct.cropId);
+      const validCrops = getValidCrops();
+      const crop = validCrops.find(c => c.id === assignedProduct.cropId);
       if (crop) {
         const newCOGS = calculateAutomaticCOGS({...parcelle, [field]: value}, crop);
         updateProduct(assignedProduct.id, { cogsPerUnit: newCOGS });
@@ -142,10 +165,10 @@ const GestionParcellesCulturesSection = () => {
   };
 
   // Filtrer les cultures selon le type sélectionné
-  const allCrops = getAllCrops();
+  const validCrops = getValidCrops();
   const filteredCrops = selectedCropType === 'all' 
-    ? allCrops 
-    : allCrops.filter(crop => crop.category === selectedCropType);
+    ? validCrops 
+    : validCrops.filter(crop => crop.category === selectedCropType);
 
   const totalMetrics = getTotalMetrics();
 
@@ -335,7 +358,7 @@ const GestionParcellesCulturesSection = () => {
       <div className="grid lg:grid-cols-2 gap-6">
         {parcelles.map((parcelle) => {
           const assignedProduct = data.products.find(p => p.parcelleId === parcelle.id);
-          const assignedCrop = assignedProduct?.cropId ? IVORY_COAST_CROPS.find(c => c.id === assignedProduct.cropId) : null;
+          const assignedCrop = assignedProduct?.cropId ? validCrops.find(c => c.id === assignedProduct.cropId) : null;
           const cyclesParAn = assignedProduct ? calculateCyclesParAn(assignedProduct) : 0;
           const revenueAnnuel = assignedProduct ? calculateProductRevenue(assignedProduct.id) : 0;
           
@@ -422,14 +445,14 @@ const GestionParcellesCulturesSection = () => {
                 <div>
                   <Label className="text-gray-600">Culture assignée</Label>
                   <Select
-                    value={assignedProduct?.cropId || ''}
+                    value={assignedProduct?.cropId || 'no-culture'}
                     onValueChange={(value) => handleAssignCulture(parcelle.id, value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Choisir une culture" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Aucune culture</SelectItem>
+                      <SelectItem value="no-culture">Aucune culture</SelectItem>
                       {filteredCrops.map((crop) => (
                         <SelectItem key={crop.id} value={crop.id}>
                           <div className="flex items-center gap-2">
