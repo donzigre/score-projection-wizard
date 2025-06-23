@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Product } from '@/types/financial';
 
@@ -146,6 +147,22 @@ export interface Calculations {
     vehicle: number;
     other: number;
   };
+}
+
+// Export FinancialData interface so it can be imported elsewhere
+export interface FinancialData {
+  products: Product[];
+  salaries: Salary[];
+  operatingCapital: OperatingCapital;
+  operatingExpenses: OperatingExpense[];
+  
+  // Missing properties that components expect
+  companyInfo: CompanyInfo;
+  additionalParameters: AdditionalParameters;
+  fixedAssets: FixedAsset[];
+  fundingSources: FundingSource[];
+  workingCapitalItems: WorkingCapitalItem[];
+  payrollData: PayrollData;
 }
 
 interface FinancialDataContextType {
