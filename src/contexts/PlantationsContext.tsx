@@ -128,9 +128,16 @@ export const PlantationsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const totals = plantationParcelles.reduce((acc, parcelle) => {
       const assignedCrop = parcelle.cultureActuelle ? allCrops.find(c => c.id === parcelle.cultureActuelle) : undefined;
       
-      // Simple calculations - we'll need to implement proper calculation functions
-      const couts = assignedCrop ? parcelle.surface * (assignedCrop.coutProduction || 1000) : 0;
-      const revenus = assignedCrop ? parcelle.surface * (assignedCrop.rendementMoyen || 1) * (assignedCrop.prixVenteMoyen || 500) : 0;
+      // Calculate costs using the correct property structure
+      const totalProductionCosts = assignedCrop 
+        ? Object.values(assignedCrop.productionCosts).reduce((sum, cost) => sum + cost, 0)
+        : 0;
+      const couts = assignedCrop ? parcelle.surface * totalProductionCosts : 0;
+      
+      // Calculate revenues using the correct property names
+      const revenus = assignedCrop 
+        ? parcelle.surface * assignedCrop.averageYieldPerHectare * assignedCrop.regionalPrices.average 
+        : 0;
       
       return {
         surfaceTotale: acc.surfaceTotale + parcelle.surface,
