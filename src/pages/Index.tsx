@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,18 +13,26 @@ import OutilsDiagnosticSection from '@/components/sections/OutilsDiagnosticSecti
 import AnalyseSeuilRentabiliteSection from '@/components/sections/AnalyseSeuilRentabiliteSection';
 import ConfigurationSection from '@/components/sections/ConfigurationSection';
 import TestInteractionSection from '@/components/sections/TestInteractionSection';
-import { Sprout, TrendingUp, Users, CreditCard, BarChart3, FileText, Calculator, Settings, TestTube2, Activity } from "lucide-react";
+import { Sprout, TrendingUp, Users, CreditCard, BarChart3, FileText, Calculator, Settings, TestTube2, Activity, Building2 } from "lucide-react";
+import { PlantationHierarchySection } from '@/components/sections/PlantationHierarchySection';
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState("parcelles");
+  const [activeTab, setActiveTab] = useState("plantations");
 
   const tabs = [
     {
+      id: "plantations",
+      label: "Gestion Plantations",
+      icon: Building2,
+      component: PlantationHierarchySection,
+      description: "Gestion hiérarchique complète des plantations et parcelles"
+    },
+    {
       id: "parcelles",
-      label: "Gestion Parcelles",
+      label: "Parcelles (Ancien)",
       icon: Sprout,
       component: ParcelleManagementSection,
-      description: "Gestion unifiée des parcelles et cultures"
+      description: "Interface de gestion des parcelles (version précédente)"
     },
     {
       id: "ventes",
