@@ -3,17 +3,17 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ParcelleManagementSection } from '@/components/sections/ParcelleManagementSection';
-import { PrevisionsVentesSection } from '@/components/sections/PrevisionsVentesSection';
-import { MasseSalarialeSection } from '@/components/sections/MasseSalarialeSection';
-import { ChargesExploitationSection } from '@/components/sections/ChargesExploitationSection';
-import { FluxTresorerieAgricoleSection } from '@/components/sections/FluxTresorerieAgricoleSection';
-import { BilanSection } from '@/components/sections/BilanSection';
-import { CompteResultatSection } from '@/components/sections/CompteResultatSection';
-import { RatiosFinanciersSection } from '@/components/sections/RatiosFinanciersSection';
-import { OutilsDiagnosticSection } from '@/components/sections/OutilsDiagnosticSection';
-import { AnalyseSeuilRentabiliteSection } from '@/components/sections/AnalyseSeuilRentabiliteSection';
-import { ConfigurationSection } from '@/components/sections/ConfigurationSection';
-import { TestInteractionSection } from '@/components/sections/TestInteractionSection';
+import PrevisionsVentesSection from '@/components/sections/PrevisionsVentesSection';
+import MasseSalarialeSection from '@/components/sections/MasseSalarialeSection';
+import ChargesExploitationSection from '@/components/sections/ChargesExploitationSection';
+import FluxTresorerieAgricoleSection from '@/components/sections/FluxTresorerieAgricoleSection';
+import BilanSection from '@/components/sections/BilanSection';
+import CompteResultatSection from '@/components/sections/CompteResultatSection';
+import RatiosFinanciersSection from '@/components/sections/RatiosFinanciersSection';
+import OutilsDiagnosticSection from '@/components/sections/OutilsDiagnosticSection';
+import AnalyseSeuilRentabiliteSection from '@/components/sections/AnalyseSeuilRentabiliteSection';
+import ConfigurationSection from '@/components/sections/ConfigurationSection';
+import TestInteractionSection from '@/components/sections/TestInteractionSection';
 import { Sprout, TrendingUp, Users, CreditCard, BarChart3, FileText, Calculator, Settings, TestTube2, Activity } from "lucide-react";
 
 const Index = () => {
