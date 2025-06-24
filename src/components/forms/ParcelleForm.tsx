@@ -4,9 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Plus, Save } from "lucide-react";
-import { useFinancialData } from '@/contexts/FinancialDataContext';
+import { CultureSelector } from '@/components/selectors/CultureSelector';
 
 interface ParcelleFormData {
   nom: string;
@@ -16,11 +16,12 @@ interface ParcelleFormData {
   coutsMainOeuvre: number;
   autresCouts: number;
   rendementAttendu: number;
-  cultureId: string;
+  cultureId: string | null;
+  notes: string;
 }
 
 interface ParcelleFormProps {
-  onSubmit: (data: Omit<ParcelleFormData, 'cultureId'> & { cultureId: string | null }) => void;
+  onSubmit: (data: ParcelleFormData) => void;
   onCancel?: () => void;
   initialData?: Partial<ParcelleFormData>;
   title?: string;
@@ -32,7 +33,6 @@ export const ParcelleForm: React.FC<ParcelleFormProps> = ({
   initialData = {},
   title = "Nouvelle Parcelle"
 }) => {
-  const { data } = useFinancialData();
   const [formData, setFormData] = useState<ParcelleFormData>({
     nom: initialData.nom || '',
     surface: initialData.surface || 0,
@@ -41,38 +41,26 @@ export const ParcelleForm: React.FC<ParcelleFormProps> = ({
     coutsMainOeuvre: initialData.coutsMainOeuvre || 0,
     autresCouts: initialData.autresCouts || 0,
     rendementAttendu: initialData.rendementAttendu || 0,
-    cultureId: initialData.cultureId || 'no-culture'
+    cultureId: initialData.cultureId || null,
+    notes: initialData.notes || ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.nom && formData.surface > 0) {
-      onSubmit({
-        ...formData,
-        cultureId: formData.cultureId === 'no-culture' ? null : formData.cultureId
-      });
+      onSubmit(formData);
     }
   };
 
-  const updateField = (field: keyof ParcelleFormData, value: string | number) => {
+  const updateField = (field: keyof ParcelleFormData, value: string | number | null) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const isValid = formData.nom.trim() && formData.surface > 0;
-
-  // Filter products to ensure valid data
-  const validProducts = data.products.filter(product => 
-    product && 
-    product.id && 
-    typeof product.id === 'string' && 
-    product.id.trim() !== '' &&
-    product.name &&
-    typeof product.name === 'string' &&
-    product.name.trim() !== ''
-  );
+  const totalCosts = formData.coutsPrepration + formData.coutsIntrants + formData.coutsMainOeuvre + formData.autresCouts;
 
   return (
-    <Card>
+    <Card className="mb-6">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Plus className="h-5 w-5" />
@@ -80,7 +68,7 @@ export const ParcelleForm: React.FC<ParcelleFormProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Informations de base */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
@@ -110,30 +98,21 @@ export const ParcelleForm: React.FC<ParcelleFormProps> = ({
             </div>
           </div>
 
-          {/* Culture assignée */}
+          {/* Sélection de culture */}
           <div>
-            <Label>Culture à planter</Label>
-            <Select
-              value={formData.cultureId}
-              onValueChange={(value) => updateField('cultureId', value)}
-            >
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Choisir une culture (optionnel)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="no-culture">Aucune culture pour le moment</SelectItem>
-                {validProducts.map((product) => (
-                  <SelectItem key={product.id} value={product.id}>
-                    {product.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label className="text-base font-medium">Culture à assigner</Label>
+            <div className="mt-2">
+              <CultureSelector
+                selectedCultureId={formData.cultureId}
+                onCultureChange={(cultureId) => updateField('cultureId', cultureId)}
+                showDetails={!!formData.cultureId}
+              />
+            </div>
           </div>
 
-          {/* Coûts */}
-          <div className="space-y-3">
-            <h4 className="font-medium text-gray-900">Coûts de Production (FCFA)</h4>
+          {/* Coûts de production */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900">Coûts de Production (FCFA)</h3>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="coutsPrepration">Coûts de préparation du sol</Label>
@@ -148,7 +127,7 @@ export const ParcelleForm: React.FC<ParcelleFormProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="coutsIntrants">Coûts des intrants (semences, engrais)</Label>
+                <Label htmlFor="coutsIntrants">Coûts des intrants</Label>
                 <Input
                   id="coutsIntrants"
                   type="number"
@@ -184,6 +163,28 @@ export const ParcelleForm: React.FC<ParcelleFormProps> = ({
                 />
               </div>
             </div>
+
+            {/* Récapitulatif des coûts */}
+            {totalCosts > 0 && (
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium">Coûts totaux:</span>
+                    <span className="ml-2 text-lg font-bold text-blue-600">
+                      {totalCosts.toLocaleString()} FCFA
+                    </span>
+                  </div>
+                  {formData.surface > 0 && (
+                    <div>
+                      <span className="font-medium">Coût par hectare:</span>
+                      <span className="ml-2 text-lg font-bold text-blue-600">
+                        {(totalCosts / formData.surface).toLocaleString()} FCFA/ha
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Rendement attendu */}
@@ -198,23 +199,23 @@ export const ParcelleForm: React.FC<ParcelleFormProps> = ({
               placeholder="5000"
               className="mt-1"
             />
+            <p className="text-sm text-gray-500 mt-1">
+              Si une culture est assignée, le rendement sera calculé automatiquement selon les données CNRA/ANADER
+            </p>
           </div>
 
-          {/* Calcul automatique des coûts totaux */}
-          {(formData.coutsPrepration || formData.coutsIntrants || formData.coutsMainOeuvre || formData.autresCouts) && (
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-800">
-                <strong>Coûts totaux estimés :</strong> {' '}
-                {(formData.coutsPrepration + formData.coutsIntrants + formData.coutsMainOeuvre + formData.autresCouts).toLocaleString()} FCFA
-              </p>
-              {formData.surface > 0 && (
-                <p className="text-sm text-blue-700">
-                  <strong>Coût par hectare :</strong> {' '}
-                  {((formData.coutsPrepration + formData.coutsIntrants + formData.coutsMainOeuvre + formData.autresCouts) / formData.surface).toLocaleString()} FCFA/ha
-                </p>
-              )}
-            </div>
-          )}
+          {/* Notes */}
+          <div>
+            <Label htmlFor="notes">Notes (optionnel)</Label>
+            <Textarea
+              id="notes"
+              value={formData.notes}
+              onChange={(e) => updateField('notes', e.target.value)}
+              placeholder="Informations supplémentaires sur la parcelle..."
+              className="mt-1"
+              rows={3}
+            />
+          </div>
 
           {/* Actions */}
           <div className="flex space-x-3 pt-4">
