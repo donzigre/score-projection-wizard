@@ -26,11 +26,22 @@ export interface CultureHistorique {
   notes?: string;
 }
 
-export interface ParcelleWithHistory extends Omit<import('./parcelle').Parcelle, 'cultureId'> {
+export interface ParcelleWithHistory {
+  id: string;
+  nom: string;
+  surface: number;
+  typesSol: string[];
+  pente: 'plat' | 'leger' | 'modere' | 'fort';
+  accesChemin: boolean;
+  sourceEau: 'pluie' | 'irrigation' | 'puits' | 'riviere';
+  coordonnees?: { lat: number; lng: number };
+  dateCreation: Date;
+  notes?: string;
+  cultureId: string | null;
   plantationId: string;
   culturesHistorique: CultureHistorique[];
-  cultureActuelle?: string; // ID de la culture actuelle
-  rotationPrevue?: string[]; // IDs des cultures planifiées
+  cultureActuelle?: string;
+  rotationPrevue?: string[];
 }
 
 export interface PlantationCalculations {

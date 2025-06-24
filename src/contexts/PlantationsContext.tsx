@@ -2,10 +2,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Plantation, ParcelleWithHistory, CultureHistorique, PlantationCalculations } from '@/types/plantation';
 import { IVORY_COAST_CROPS, CropType } from '@/config/ivoryCoastAgriculture';
-import { 
-  calculateParcelleProductionCosts, 
-  calculateParcelleRevenue 
-} from '@/utils/parcelleCalculations';
 
 interface PlantationsContextType {
   plantations: Plantation[];
@@ -64,8 +60,7 @@ export const PlantationsProvider: React.FC<{ children: React.ReactNode }> = ({ c
       ...parcelleData,
       id: Date.now().toString(),
       dateCreation: new Date(),
-      culturesHistorique: [],
-      cultureId: null
+      culturesHistorique: []
     };
     setParcelles(prev => [...prev, newParcelle]);
   }, []);
@@ -93,10 +88,14 @@ export const PlantationsProvider: React.FC<{ children: React.ReactNode }> = ({ c
       
       updateParcelle(parcelleId, {
         culturesHistorique: [...parcelle.culturesHistorique, historyEntry],
-        cultureActuelle: cultureId || undefined
+        cultureActuelle: cultureId || undefined,
+        cultureId: cultureId
       });
     } else {
-      updateParcelle(parcelleId, { cultureActuelle: cultureId || undefined });
+      updateParcelle(parcelleId, { 
+        cultureActuelle: cultureId || undefined,
+        cultureId: cultureId
+      });
     }
   }, [parcelles, updateParcelle]);
 
@@ -129,8 +128,9 @@ export const PlantationsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const totals = plantationParcelles.reduce((acc, parcelle) => {
       const assignedCrop = parcelle.cultureActuelle ? allCrops.find(c => c.id === parcelle.cultureActuelle) : undefined;
       
-      const couts = calculateParcelleProductionCosts(parcelle, assignedCrop);
-      const revenus = calculateParcelleRevenue(parcelle, assignedCrop);
+      // Simple calculations - we'll need to implement proper calculation functions
+      const couts = assignedCrop ? parcelle.surface * (assignedCrop.coutProduction || 1000) : 0;
+      const revenus = assignedCrop ? parcelle.surface * (assignedCrop.rendementMoyen || 1) * (assignedCrop.prixVenteMoyen || 500) : 0;
       
       return {
         surfaceTotale: acc.surfaceTotale + parcelle.surface,
