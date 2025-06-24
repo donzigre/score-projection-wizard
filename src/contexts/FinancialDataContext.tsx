@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Product } from '@/types/financial';
 
@@ -189,21 +188,6 @@ interface FinancialDataContextType {
   updateOperatingExpenses: (expenses: OperatingExpense[]) => void;
   updatePayrollData: (payroll: Partial<PayrollData>) => void;
   calculations: Calculations;
-}
-
-interface FinancialData {
-  products: Product[];
-  salaries: Salary[];
-  operatingCapital: OperatingCapital;
-  operatingExpenses: OperatingExpense[];
-  
-  // Missing properties that components expect
-  companyInfo: CompanyInfo;
-  additionalParameters: AdditionalParameters;
-  fixedAssets: FixedAsset[];
-  fundingSources: FundingSource[];
-  workingCapitalItems: WorkingCapitalItem[];
-  payrollData: PayrollData;
 }
 
 const initialData: FinancialData = {
