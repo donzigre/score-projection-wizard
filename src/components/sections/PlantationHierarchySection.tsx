@@ -73,11 +73,18 @@ export const PlantationHierarchySection = () => {
       plantationId: selectedPlantation
     });
     setShowParcelleForm(false);
+    setSelectedPlantation(null);
   };
 
   const handleSelectPlantation = (plantationId: string) => {
     setSelectedPlantation(plantationId);
     setActiveTab('hierarchy');
+  };
+
+  const handleOpenParcelleForm = (plantationId: string) => {
+    console.log('Opening parcelle form for plantation:', plantationId);
+    setSelectedPlantation(plantationId);
+    setShowParcelleForm(true);
   };
 
   const getTypeColor = (type: string) => {
@@ -200,6 +207,18 @@ export const PlantationHierarchySection = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Formulaire de parcelle (affiché globalement quand showParcelleForm est true) */}
+        {showParcelleForm && selectedPlantation && (
+          <ParcelleForm
+            onSubmit={handleAddParcelle}
+            onCancel={() => {
+              setShowParcelleForm(false);
+              setSelectedPlantation(null);
+            }}
+            title="Nouvelle Parcelle"
+          />
+        )}
 
         {/* Interface à onglets */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -345,10 +364,7 @@ export const PlantationHierarchySection = () => {
                           </Button>
                           <Button
                             id="add-parcelle-btn"
-                            onClick={() => {
-                              setSelectedPlantation(plantation.id);
-                              setShowParcelleForm(true);
-                            }}
+                            onClick={() => handleOpenParcelleForm(plantation.id)}
                             className="bg-green-600 hover:bg-green-700"
                           >
                             <Plus className="h-4 w-4" />
@@ -376,14 +392,6 @@ export const PlantationHierarchySection = () => {
                 </Button>
               )}
             </div>
-
-            {showParcelleForm && selectedPlantation && (
-              <ParcelleForm
-                onSubmit={handleAddParcelle}
-                onCancel={() => setShowParcelleForm(false)}
-                title="Nouvelle Parcelle"
-              />
-            )}
 
             {!selectedPlantation ? (
               <Card className="text-center py-8">
