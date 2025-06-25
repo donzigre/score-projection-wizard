@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,7 @@ import { formatCurrency } from '@/utils/formatting';
 const PrevisionsVentesSection = () => {
   const { data, updateProduct, addProduct, removeProduct } = useFinancialData();
   const { plantations, parcelles, getAllCrops, calculatePlantationMetrics } = usePlantations();
-  const [selectedPlantation, setSelectedPlantation] = useState<string | null>(null);
+  const [selectedPlantation, setSelectedPlantation] = useState<string>('all');
 
   const allCrops = getAllCrops();
 
@@ -51,9 +52,9 @@ const PrevisionsVentesSection = () => {
   };
 
   // Filtrer les parcelles selon la plantation sélectionnée
-  const filteredParcelles = selectedPlantation 
-    ? parcelles.filter(p => p.plantationId === selectedPlantation)
-    : parcelles;
+  const filteredParcelles = selectedPlantation === 'all' 
+    ? parcelles 
+    : parcelles.filter(p => p.plantationId === selectedPlantation);
 
   // Calculs par plantation
   const getPlantationAnalytics = () => {
@@ -139,12 +140,12 @@ const PrevisionsVentesSection = () => {
             <Label htmlFor="plantation-filter" className="text-sm font-medium text-gray-700 mb-2 block">
               Filtrer par plantation (optionnel)
             </Label>
-            <Select value={selectedPlantation || ''} onValueChange={(value) => setSelectedPlantation(value || null)}>
+            <Select value={selectedPlantation} onValueChange={setSelectedPlantation}>
               <SelectTrigger className="bg-white">
                 <SelectValue placeholder="Toutes les plantations" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes les plantations</SelectItem>
+                <SelectItem value="all">Toutes les plantations</SelectItem>
                 {plantations.map(plantation => (
                   <SelectItem key={plantation.id} value={plantation.id}>
                     {plantation.nom} ({parcelles.filter(p => p.plantationId === plantation.id).length} parcelles)
@@ -164,7 +165,7 @@ const PrevisionsVentesSection = () => {
           const selectedCrop = product.cropId ? allCrops.find(c => c.id === product.cropId) : null;
           
           // Ne pas afficher si filtré par plantation et que le produit n'appartient pas à cette plantation
-          if (selectedPlantation && assignedParcelle?.plantationId !== selectedPlantation) {
+          if (selectedPlantation !== 'all' && (!assignedParcelle || assignedParcelle.plantationId !== selectedPlantation)) {
             return null;
           }
           
@@ -232,13 +233,14 @@ const PrevisionsVentesSection = () => {
                       Parcelle Assignée
                     </Label>
                     <Select
-                      value={product.parcelleId || ''}
-                      onValueChange={(value) => updateProduct(product.id, { parcelleId: value || null })}
+                      value={product.parcelleId || 'none'}
+                      onValueChange={(value) => updateProduct(product.id, { parcelleId: value === 'none' ? null : value })}
                     >
                       <SelectTrigger className="mt-1 bg-blue-50 border-blue-200">
                         <SelectValue placeholder="Sélectionner une parcelle" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="none">Aucune parcelle assignée</SelectItem>
                         {filteredParcelles.map(parcelle => {
                           const plantation = plantations.find(p => p.id === parcelle.plantationId);
                           const culture = parcelle.cultureActuelle ? allCrops.find(c => c.id === parcelle.cultureActuelle) : null;
