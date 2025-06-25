@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,11 @@ import { usePlantations } from '@/contexts/PlantationsContext';
 import { PlantationForm } from '@/components/forms/PlantationForm';
 import { ParcelleForm } from '@/components/forms/ParcelleForm';
 import { CultureSelector } from '@/components/selectors/CultureSelector';
+import { TutorialGuide } from '@/components/tutorial/TutorialGuide';
+import { ContextualMessage } from '@/components/tutorial/ContextualMessage';
 import { formatCurrency } from '@/utils/formatting';
 import { IVORY_COAST_CROPS } from '@/config/ivoryCoastAgriculture';
+import { useTutorial } from '@/hooks/useTutorial';
 
 export const PlantationHierarchySection = () => {
   const { 
@@ -28,6 +31,8 @@ export const PlantationHierarchySection = () => {
     getTotalMetrics 
   } = usePlantations();
   
+  const { markStepCompleted, isStepCompleted, tutorialState } = useTutorial();
+  
   const [activeTab, setActiveTab] = useState('plantations');
   const [showPlantationForm, setShowPlantationForm] = useState(false);
   const [showParcelleForm, setShowParcelleForm] = useState(false);
@@ -35,6 +40,26 @@ export const PlantationHierarchySection = () => {
   const [editingPlantation, setEditingPlantation] = useState<string | null>(null);
 
   const totalMetrics = getTotalMetrics();
+
+  // Tutorial step completion tracking
+  useEffect(() => {
+    if (plantations.length > 0 && !isStepCompleted('create-plantation')) {
+      markStepCompleted('create-plantation');
+    }
+  }, [plantations.length, isStepCompleted, markStepCompleted]);
+
+  useEffect(() => {
+    if (parcelles.length > 0 && !isStepCompleted('add-parcelle')) {
+      markStepCompleted('add-parcelle');
+    }
+  }, [parcelles.length, isStepCompleted, markStepCompleted]);
+
+  useEffect(() => {
+    const parcellesWithCultures = parcelles.filter(p => p.cultureActuelle);
+    if (parcellesWithCultures.length > 0 && !isStepCompleted('assign-culture')) {
+      markStepCompleted('assign-culture');
+    }
+  }, [parcelles, isStepCompleted, markStepCompleted]);
 
   const handleAddPlantation = (plantationData: any) => {
     addPlantation(plantationData);
@@ -45,10 +70,14 @@ export const PlantationHierarchySection = () => {
     if (!selectedPlantation) return;
     addParcelle({
       ...parcelleData,
-      plantationId: selectedPlantation,
-      statut: 'preparee'
+      plantationId: selectedPlantation
     });
     setShowParcelleForm(false);
+  };
+
+  const handleSelectPlantation = (plantationId: string) => {
+    setSelectedPlantation(plantationId);
+    setActiveTab('hierarchy');
   };
 
   const getTypeColor = (type: string) => {
@@ -71,6 +100,43 @@ export const PlantationHierarchySection = () => {
     return labels[type as keyof typeof labels] || type;
   };
 
+  // Messages contextuels selon l'état
+  const getContextualMessages = () => {
+    const messages = [];
+
+    if (plantations.length === 0) {
+      messages.push({
+        type: 'tip' as const,
+        title: 'Bienvenue !',
+        message: 'Commencez par créer votre première plantation pour organiser vos parcelles agricoles.',
+        badge: 'Étape 1'
+      });
+    } else if (parcelles.length === 0) {
+      messages.push({
+        type: 'info' as const,
+        title: 'Ajoutez des parcelles',
+        message: 'Divisez vos plantations en parcelles pour une gestion détaillée de chaque zone de culture.',
+        badge: 'Étape 2'
+      });
+    } else if (parcelles.filter(p => p.cultureActuelle).length === 0) {
+      messages.push({
+        type: 'warning' as const,
+        title: 'Assignez des cultures',
+        message: 'Choisissez les cultures adaptées à chaque parcelle selon les données CNRA/ANADER.',
+        badge: 'Étape 3'
+      });
+    } else {
+      messages.push({
+        type: 'success' as const,
+        title: 'Configuration terminée !',
+        message: 'Consultez l\'onglet Analyses pour voir les performances de vos cultures.',
+        badge: 'Complété'
+      });
+    }
+
+    return messages;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -82,6 +148,19 @@ export const PlantationHierarchySection = () => {
           <p className="text-gray-600">
             Plantation → Parcelles → Cultures : Organisation complète de vos sites agricoles
           </p>
+        </div>
+
+        {/* Messages contextuels */}
+        <div className="space-y-3">
+          {getContextualMessages().map((msg, index) => (
+            <ContextualMessage
+              key={index}
+              type={msg.type}
+              title={msg.title}
+              message={msg.message}
+              badge={msg.badge}
+            />
+          ))}
         </div>
 
         {/* Tableau de bord global */}
@@ -133,7 +212,7 @@ export const PlantationHierarchySection = () => {
               <MapPin className="h-4 w-4" />
               Vue Hiérarchique
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <TabsTrigger value="analytics" className="flex items-center gap-2" id="analytics-tab">
               <TrendingUp className="h-4 w-4" />
               Analyses & Comparaisons
             </TabsTrigger>
@@ -143,7 +222,11 @@ export const PlantationHierarchySection = () => {
           <TabsContent value="plantations" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Vos Plantations ({plantations.length})</h2>
-              <Button onClick={() => setShowPlantationForm(true)} className="flex items-center gap-2">
+              <Button 
+                id="create-plantation-btn"
+                onClick={() => setShowPlantationForm(true)} 
+                className="flex items-center gap-2"
+              >
                 <Plus className="h-4 w-4" />
                 Nouvelle Plantation
               </Button>
@@ -256,18 +339,17 @@ export const PlantationHierarchySection = () => {
                           <Button
                             variant="outline"
                             className="flex-1"
-                            onClick={() => {
-                              setSelectedPlantation(plantation.id);
-                              setActiveTab('hierarchy');
-                            }}
+                            onClick={() => handleSelectPlantation(plantation.id)}
                           >
                             Voir les parcelles ({plantationParcelles.length})
                           </Button>
                           <Button
+                            id="add-parcelle-btn"
                             onClick={() => {
                               setSelectedPlantation(plantation.id);
                               setShowParcelleForm(true);
                             }}
+                            className="bg-green-600 hover:bg-green-700"
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -314,7 +396,7 @@ export const PlantationHierarchySection = () => {
                       <Button
                         key={plantation.id}
                         variant="outline"
-                        onClick={() => setSelectedPlantation(plantation.id)}
+                        onClick={() => handleSelectPlantation(plantation.id)}
                         className="p-4 h-auto flex-col"
                       >
                         <Building2 className="h-8 w-8 mb-2" />
@@ -464,6 +546,9 @@ export const PlantationHierarchySection = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Tutoriel Guide */}
+        <TutorialGuide />
       </div>
     </div>
   );
