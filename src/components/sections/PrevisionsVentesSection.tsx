@@ -1,17 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, Sprout } from "lucide-react";
+import { Trash2, Plus, Sprout, Building2, Leaf, TrendingUp, Calculator } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useFinancialData } from '@/contexts/FinancialDataContext';
-import { useParcelles } from '@/contexts/ParcellesContext';
+import { usePlantations } from '@/contexts/PlantationsContext';
 import { IVORY_COAST_CROPS } from '@/config/ivoryCoastAgriculture';
+import { formatCurrency } from '@/utils/formatting';
 
 const PrevisionsVentesSection = () => {
   const { data, updateProduct, addProduct, removeProduct } = useFinancialData();
-  const { parcelles } = useParcelles();
+  const { plantations, parcelles, getAllCrops, calculatePlantationMetrics } = usePlantations();
+  const [selectedPlantation, setSelectedPlantation] = useState<string | null>(null);
+
+  const allCrops = getAllCrops();
 
   const calculateCyclesPerYear = (cycleMonths: number, reposPeriod: number) => {
     return Math.floor(12 / (cycleMonths + reposPeriod));
@@ -45,17 +50,123 @@ const PrevisionsVentesSection = () => {
     return new Intl.NumberFormat('fr-FR').format(number);
   };
 
+  // Filtrer les parcelles selon la plantation sélectionnée
+  const filteredParcelles = selectedPlantation 
+    ? parcelles.filter(p => p.plantationId === selectedPlantation)
+    : parcelles;
+
+  // Calculs par plantation
+  const getPlantationAnalytics = () => {
+    return plantations.map(plantation => {
+      const plantationParcelles = parcelles.filter(p => p.plantationId === plantation.id);
+      const metrics = calculatePlantationMetrics(plantation.id);
+      const plantationProducts = data.products.filter(p => 
+        plantationParcelles.some(parcelle => parcelle.id === p.parcelleId)
+      );
+      
+      const productionTotal = plantationProducts.reduce((acc, product) => 
+        acc + calculateAnnualProduction(product), 0
+      );
+      
+      const revenueTotal = plantationProducts.reduce((acc, product) => 
+        acc + calculateAnnualRevenue(product), 0
+      );
+
+      return {
+        plantation,
+        parcelles: plantationParcelles,
+        metrics,
+        products: plantationProducts,
+        productionTotal,
+        revenueTotal
+      };
+    });
+  };
+
+  const plantationAnalytics = getPlantationAnalytics();
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Prévisions de Ventes Année 1</h2>
-        <p className="text-gray-600">Configurez vos produits agricoles et leurs prévisions de vente</p>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">Prévisions de Ventes Basées sur les Plantations</h2>
+        <p className="text-gray-600">Analysez et configurez vos prévisions de vente par plantation et parcelle</p>
       </div>
 
+      {/* Vue d'ensemble par plantation */}
+      <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-6 w-6 text-blue-600" />
+            Analyse par Plantation
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            {plantationAnalytics.map(({ plantation, parcelles: plantationParcelles, metrics, revenueTotal }) => (
+              <Card key={plantation.id} className="border-l-4 border-l-green-500">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Building2 className="h-5 w-5 text-green-600" />
+                    <h4 className="font-semibold">{plantation.nom}</h4>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Parcelles:</span>
+                      <span className="font-medium">{plantationParcelles.length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Surface totale:</span>
+                      <span className="font-medium">{metrics.surfaceTotale.toFixed(1)} ha</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">CA prévisionnel:</span>
+                      <span className="font-medium text-green-600">{formatCurrency(revenueTotal)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Rentabilité:</span>
+                      <span className={`font-medium ${metrics.rentabilite >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {metrics.rentabilite.toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Filtre par plantation */}
+          <div className="mb-4">
+            <Label htmlFor="plantation-filter" className="text-sm font-medium text-gray-700 mb-2 block">
+              Filtrer par plantation (optionnel)
+            </Label>
+            <Select value={selectedPlantation || ''} onValueChange={(value) => setSelectedPlantation(value || null)}>
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Toutes les plantations" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Toutes les plantations</SelectItem>
+                {plantations.map(plantation => (
+                  <SelectItem key={plantation.id} value={plantation.id}>
+                    {plantation.nom} ({parcelles.filter(p => p.plantationId === plantation.id).length} parcelles)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Liste des produits */}
       <div className="grid gap-6">
         {data.products.map((product, index) => {
-          const assignedParcelle = parcelles.find(p => p.id === product.parcelleId);
-          const selectedCrop = product.cropId ? IVORY_COAST_CROPS.find(c => c.id === product.cropId) : null;
+          const assignedParcelle = filteredParcelles.find(p => p.id === product.parcelleId);
+          const assignedPlantation = assignedParcelle ? plantations.find(pl => pl.id === assignedParcelle.plantationId) : null;
+          const selectedCrop = product.cropId ? allCrops.find(c => c.id === product.cropId) : null;
+          
+          // Ne pas afficher si filtré par plantation et que le produit n'appartient pas à cette plantation
+          if (selectedPlantation && assignedParcelle?.plantationId !== selectedPlantation) {
+            return null;
+          }
           
           return (
             <Card key={product.id} className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-white">
@@ -77,15 +188,25 @@ const PrevisionsVentesSection = () => {
                   )}
                 </div>
                 
-                {assignedParcelle && (
+                {/* Informations sur la plantation et parcelle */}
+                {assignedPlantation && assignedParcelle && (
                   <div className="bg-blue-100 p-3 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      <strong>Parcelle assignée:</strong> {assignedParcelle.nom} ({assignedParcelle.surface} ha)
+                    <div className="flex items-center gap-2 mb-2">
+                      <Building2 className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-medium text-blue-800">
+                        Plantation: {assignedPlantation.nom}
+                      </span>
+                    </div>
+                    <p className="text-sm text-blue-700">
+                      <strong>Parcelle:</strong> {assignedParcelle.nom} ({assignedParcelle.surface} ha)
                     </p>
                     {selectedCrop && (
-                      <p className="text-sm text-blue-700 mt-1">
-                        <strong>Culture:</strong> {selectedCrop.name} ({selectedCrop.category})
-                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Leaf className="h-4 w-4 text-green-600" />
+                        <span className="text-sm text-green-700">
+                          <strong>Culture:</strong> {selectedCrop.name} ({selectedCrop.category})
+                        </span>
+                      </div>
                     )}
                   </div>
                 )}
@@ -107,6 +228,34 @@ const PrevisionsVentesSection = () => {
                   </div>
 
                   <div>
+                    <Label htmlFor={`parcelle-select-${product.id}`} className="text-sm font-medium text-gray-700">
+                      Parcelle Assignée
+                    </Label>
+                    <Select
+                      value={product.parcelleId || ''}
+                      onValueChange={(value) => updateProduct(product.id, { parcelleId: value || null })}
+                    >
+                      <SelectTrigger className="mt-1 bg-blue-50 border-blue-200">
+                        <SelectValue placeholder="Sélectionner une parcelle" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredParcelles.map(parcelle => {
+                          const plantation = plantations.find(p => p.id === parcelle.plantationId);
+                          const culture = parcelle.cultureActuelle ? allCrops.find(c => c.id === parcelle.cultureActuelle) : null;
+                          return (
+                            <SelectItem key={parcelle.id} value={parcelle.id}>
+                              {plantation?.nom} → {parcelle.nom} ({parcelle.surface} ha)
+                              {culture && ` - ${culture.name}`}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
                     <Label htmlFor={`product-unit-${product.id}`} className="text-sm font-medium text-gray-700">
                       Unité de Mesure
                     </Label>
@@ -127,6 +276,20 @@ const PrevisionsVentesSection = () => {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <div>
+                    <Label htmlFor={`price-per-unit-${product.id}`} className="text-sm font-medium text-gray-700">
+                      Prix par {product.unit || 'kg'} (FCFA)
+                    </Label>
+                    <Input
+                      id={`price-per-unit-${product.id}`}
+                      type="number"
+                      value={product.pricePerUnit}
+                      onChange={(e) => updateProduct(product.id, { pricePerUnit: Number(e.target.value) })}
+                      className="mt-1 bg-green-50 border-green-200 focus:border-green-500"
+                      placeholder="Prix de vente unitaire"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid md:grid-cols-3 gap-4">
@@ -143,9 +306,9 @@ const PrevisionsVentesSection = () => {
                       placeholder="Basé sur CNRA/ANADER"
                       readOnly={!!selectedCrop}
                     />
-                    {selectedCrop && (
+                    {selectedCrop && assignedParcelle && (
                       <p className="text-xs text-blue-600 mt-1">
-                        Auto-calculé: {selectedCrop.averageYieldPerHectare} {product.unit}/ha × {assignedParcelle?.surface || 1} ha
+                        Auto-calculé: {selectedCrop.averageYieldPerHectare} {product.unit}/ha × {assignedParcelle.surface} ha
                       </p>
                     )}
                   </div>
@@ -165,22 +328,6 @@ const PrevisionsVentesSection = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor={`price-per-unit-${product.id}`} className="text-sm font-medium text-gray-700">
-                      Prix par {product.unit || 'kg'} (FCFA)
-                    </Label>
-                    <Input
-                      id={`price-per-unit-${product.id}`}
-                      type="number"
-                      value={product.pricePerUnit}
-                      onChange={(e) => updateProduct(product.id, { pricePerUnit: Number(e.target.value) })}
-                      className="mt-1 bg-green-50 border-green-200 focus:border-green-500"
-                      placeholder="Prix de vente unitaire"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div>
                     <Label htmlFor={`cycle-months-${product.id}`} className="text-sm font-medium text-gray-700">
                       Durée du Cycle (mois)
                     </Label>
@@ -194,7 +341,9 @@ const PrevisionsVentesSection = () => {
                       max="12"
                     />
                   </div>
+                </div>
 
+                <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor={`repos-period-${product.id}`} className="text-sm font-medium text-gray-700">
                       Période de Repos (mois)
@@ -221,13 +370,7 @@ const PrevisionsVentesSection = () => {
                       onChange={(e) => updateProduct(product.id, { cogsPerUnit: Number(e.target.value) })}
                       className="mt-1 bg-red-50 border-red-200 focus:border-red-500"
                       placeholder="Coût de revient unitaire"
-                      readOnly={assignedParcelle && product.rendementReel > 0}
                     />
-                    {assignedParcelle && product.rendementReel > 0 && (
-                      <p className="text-xs text-red-600 mt-1">
-                        Auto-calculé selon les charges de la parcelle
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -275,10 +418,13 @@ const PrevisionsVentesSection = () => {
         </Button>
       </div>
 
+      {/* Résumé des prévisions */}
       <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
         <CardContent className="pt-6">
           <div className="text-center">
-            <h3 className="text-xl font-semibold text-blue-800 mb-4">Résumé des Prévisions de Ventes</h3>
+            <h3 className="text-xl font-semibold text-blue-800 mb-4">
+              Résumé des Prévisions {selectedPlantation ? `- ${plantations.find(p => p.id === selectedPlantation)?.nom}` : 'Globales'}
+            </h3>
             <div className="grid md:grid-cols-3 gap-6">
               <div>
                 <p className="text-sm text-gray-600">Chiffre d'Affaires Total Prévu</p>

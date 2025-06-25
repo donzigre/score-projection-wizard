@@ -1,7 +1,7 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ParcelleManagementSection } from '@/components/sections/ParcelleManagementSection';
 import PrevisionsVentesSection from '@/components/sections/PrevisionsVentesSection';
 import MasseSalarialeSection from '@/components/sections/MasseSalarialeSection';
 import ChargesExploitationSection from '@/components/sections/ChargesExploitationSection';
@@ -13,7 +13,7 @@ import OutilsDiagnosticSection from '@/components/sections/OutilsDiagnosticSecti
 import AnalyseSeuilRentabiliteSection from '@/components/sections/AnalyseSeuilRentabiliteSection';
 import ConfigurationSection from '@/components/sections/ConfigurationSection';
 import TestInteractionSection from '@/components/sections/TestInteractionSection';
-import { Sprout, TrendingUp, Users, CreditCard, BarChart3, FileText, Calculator, Settings, TestTube2, Activity, Building2 } from "lucide-react";
+import { TrendingUp, Users, CreditCard, BarChart3, FileText, Calculator, Settings, TestTube2, Activity, Building2 } from "lucide-react";
 import { PlantationHierarchySection } from '@/components/sections/PlantationHierarchySection';
 
 const Index = () => {
@@ -28,18 +28,11 @@ const Index = () => {
       description: "Gestion hiérarchique complète des plantations et parcelles"
     },
     {
-      id: "parcelles",
-      label: "Parcelles (Ancien)",
-      icon: Sprout,
-      component: ParcelleManagementSection,
-      description: "Interface de gestion des parcelles (version précédente)"
-    },
-    {
       id: "ventes",
       label: "Prévisions Ventes",
       icon: TrendingUp,
       component: PrevisionsVentesSection,
-      description: "Projections de ventes et revenus"
+      description: "Projections de ventes et revenus basées sur les plantations"
     },
     {
       id: "salaires",
