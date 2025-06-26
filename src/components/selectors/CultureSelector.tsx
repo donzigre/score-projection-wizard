@@ -34,7 +34,10 @@ export const CultureSelector: React.FC<CultureSelectorProps> = ({
     const matchesSearch = crop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          crop.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || crop.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const isCurrentlySelected = selectedCultureId === crop.id;
+    
+    // Always include the currently selected crop, even if it doesn't match filters
+    return (matchesSearch && matchesCategory) || isCurrentlySelected;
   });
 
   const selectedCrop = selectedCultureId ? IVORY_COAST_CROPS.find(c => c.id === selectedCultureId) : null;
