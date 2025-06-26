@@ -33,7 +33,7 @@ const initialParcelles: Parcelle[] = [
     localisation: 'Zone Nord',
     typeTerroir: 'Sol argileux',
     cultureId: 'gombo', // ID du gombo dans IVORY_COAST_CROPS
-    statut: 'En production',
+    statut: 'en_croissance', // Changed from "En production" to valid enum value
     dateCreation: new Date('2025-06-01'),
     // Coûts basés sur les données Excel
     coutsPrepration: 150000, // Préparation du sol
