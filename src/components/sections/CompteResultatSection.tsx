@@ -34,53 +34,8 @@ const CompteResultatSection = () => {
     );
   }
 
-  if (!canGenerateReports) {
-    return (
-      <div className="space-y-6">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Compte de Résultat</h2>
-          <p className="text-gray-600">État de résultat prévisionnel sur 3 ans</p>
-        </div>
-
-        <EmptyState
-          title="Données insuffisantes"
-          description="Pour générer le compte de résultat, vous devez saisir vos prévisions de chiffre d'affaires et vos charges."
-          actionText="Configurer les Ventes"
-          onAction={() => {
-            console.log('Navigate to sales forecast');
-          }}
-          icon={<BarChart3 className="h-12 w-12" />}
-        />
-
-        <div className="grid md:grid-cols-2 gap-4">
-          <Card className="border-dashed border-2 border-purple-300 bg-purple-50">
-            <CardContent className="p-6 text-center">
-              <h3 className="font-semibold text-purple-800 mb-2">Données requises :</h3>
-              <ul className="text-sm text-purple-700 space-y-1">
-                <li>• Prévisions de ventes (produits et prix)</li>
-                <li>• Charges d'exploitation</li>
-                <li>• Masse salariale (si applicable)</li>
-                <li>• Amortissements (calculés automatiquement)</li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card className="border-dashed border-2 border-green-300 bg-green-50">
-            <CardContent className="p-6 text-center">
-              <h3 className="font-semibold text-green-800 mb-2">Résultats obtenus :</h3>
-              <ul className="text-sm text-green-700 space-y-1">
-                <li>• Chiffre d'affaires prévisionnel</li>
-                <li>• Résultat d'exploitation</li>
-                <li>• Résultat net</li>
-                <li>• Évolution sur 3 ans</li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
+  // Générer le compte de résultat même si canGenerateReports est false
+  // car nous avons des données pré-remplies
   const compteResultat = generateCompteResultat(data);
 
   const calculateGrowthRate = (year1: number, year2: number) => {
@@ -93,6 +48,11 @@ const CompteResultatSection = () => {
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Compte de Résultat</h2>
         <p className="text-gray-600">État de résultat prévisionnel sur 3 ans</p>
+        {!canGenerateReports && (
+          <p className="text-sm text-amber-600 mt-2">
+            Données de démonstration - Personnalisez vos paramètres pour des résultats précis
+          </p>
+        )}
       </div>
 
       <Card>
@@ -193,7 +153,10 @@ const CompteResultatSection = () => {
             </div>
             <h3 className="font-semibold text-blue-800 mb-1">Marge d'Exploitation</h3>
             <p className="text-2xl font-bold text-blue-600">
-              {((compteResultat.resultatExploitation.year1 / compteResultat.chiffreAffaires.year1) * 100).toFixed(1)}%
+              {compteResultat.chiffreAffaires.year1 > 0 ? 
+                ((compteResultat.resultatExploitation.year1 / compteResultat.chiffreAffaires.year1) * 100).toFixed(1) : 
+                '0.0'
+              }%
             </p>
             <p className="text-sm text-blue-700">Année 1</p>
           </CardContent>

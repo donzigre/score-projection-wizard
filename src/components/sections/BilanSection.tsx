@@ -34,53 +34,8 @@ const BilanSection = () => {
     );
   }
 
-  if (!canGenerateReports || (!hasFixedAssets && !hasFundingSources)) {
-    return (
-      <div className="space-y-6">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Bilan</h2>
-          <p className="text-gray-600">Bilan prévisionnel sur 3 ans</p>
-        </div>
-
-        <EmptyState
-          title="Données insuffisantes"
-          description="Pour générer le bilan, vous devez configurer vos immobilisations et sources de financement dans 'Point de Départ'."
-          actionText="Configurer le Point de Départ"
-          onAction={() => {
-            console.log('Navigate to starting point');
-          }}
-          icon={<Building className="h-12 w-12" />}
-        />
-
-        <div className="grid md:grid-cols-2 gap-4">
-          <Card className="border-dashed border-2 border-indigo-300 bg-indigo-50">
-            <CardContent className="p-6 text-center">
-              <h3 className="font-semibold text-indigo-800 mb-2">Actif requis :</h3>
-              <ul className="text-sm text-indigo-700 space-y-1">
-                <li>• Immobilisations (terrains, bâtiments, matériel)</li>
-                <li>• Stocks de départ</li>
-                <li>• Trésorerie initiale</li>
-                <li>• Créances (calculées automatiquement)</li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card className="border-dashed border-2 border-teal-300 bg-teal-50">
-            <CardContent className="p-6 text-center">
-              <h3 className="font-semibold text-teal-800 mb-2">Passif requis :</h3>
-              <ul className="text-sm text-teal-700 space-y-1">
-                <li>• Capital initial</li>
-                <li>• Emprunts et financements</li>
-                <li>• Subventions reçues</li>
-                <li>• Dettes (calculées automatiquement)</li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
+  // Générer le bilan même si les validations strictes échouent
+  // car nous avons des données pré-remplies
   const compteResultat = generateCompteResultat(data);
   const bilan = generateBilan(data, compteResultat);
 
@@ -94,6 +49,11 @@ const BilanSection = () => {
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Bilan</h2>
         <p className="text-gray-600">Bilan prévisionnel sur 3 ans</p>
+        {(!canGenerateReports || (!hasFixedAssets && !hasFundingSources)) && (
+          <p className="text-sm text-amber-600 mt-2">
+            Données de démonstration - Configurez vos actifs et financements pour des résultats précis
+          </p>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
@@ -261,7 +221,7 @@ const BilanSection = () => {
             <p className="text-2xl font-bold text-green-600">
               {calculateRatio(
                 bilan.actif.stocks.year1 + bilan.actif.creances.year1 + bilan.actif.tresorerie.year1,
-                bilan.passif.dettes.year1
+                bilan.passif.dettes.year1 || 1
               )}%
             </p>
             <p className="text-sm text-green-700">Année 1</p>
@@ -293,7 +253,7 @@ const BilanSection = () => {
             <p className="text-2xl font-bold text-orange-600">
               +{calculateRatio(
                 bilan.actif.totalActif.year3 - bilan.actif.totalActif.year1,
-                bilan.actif.totalActif.year1
+                bilan.actif.totalActif.year1 || 1
               )}%
             </p>
             <p className="text-sm text-orange-700">Sur 3 ans</p>

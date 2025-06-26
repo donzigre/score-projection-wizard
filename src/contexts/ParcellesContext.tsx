@@ -24,10 +24,31 @@ interface ParcellesContextType {
   getTotalMetrics: () => ParcelleCalculations;
 }
 
+// Données de démonstration initiales basées sur les images Excel
+const initialParcelles: Parcelle[] = [
+  {
+    id: '1',
+    nom: 'Parcelle Gombo A1',
+    surface: 1.0, // 1 hectare
+    localisation: 'Zone Nord',
+    typeTerroir: 'Sol argileux',
+    cultureId: 'gombo', // ID du gombo dans IVORY_COAST_CROPS
+    statut: 'En production',
+    dateCreation: new Date('2025-06-01'),
+    // Coûts basés sur les données Excel
+    coutsPrepration: 150000, // Préparation du sol
+    coutsIntrants: 290000 + 1560000 + 250000, // Semences + Engrais + Pesticides
+    coutsMainOeuvre: 600000, // Main d'œuvre annuelle
+    autresCouts: 800000 + 250000 + 150000 + 300000, // Équipements et infrastructure
+    rendementAttendu: 7122 * 593.5, // 7122 kg/ha * 593.5 FCFA/kg
+    notes: 'Parcelle de démonstration basée sur les données CNRA/ANADER'
+  }
+];
+
 const ParcellesContext = createContext<ParcellesContextType | undefined>(undefined);
 
 export const ParcellesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [parcelles, setParcelles] = useState<Parcelle[]>([]);
+  const [parcelles, setParcelles] = useState<Parcelle[]>(initialParcelles);
   const [culturesParcelles, setCulturesParcelles] = useState<CultureParcelle[]>([]);
   const [customCrops, setCustomCrops] = useState<CropType[]>([]);
 
