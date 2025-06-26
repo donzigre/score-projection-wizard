@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Parcelle, CultureParcelle, ParcelleCalculations } from '@/types/parcelle';
 import { IVORY_COAST_CROPS, CropType } from '@/config/ivoryCoastAgriculture';
@@ -30,7 +29,6 @@ const initialParcelles: Parcelle[] = [
     id: '1',
     nom: 'Parcelle Gombo A1',
     surface: 1.0, // 1 hectare
-    localisation: 'Zone Nord',
     typeTerroir: 'Sol argileux',
     cultureId: 'gombo', // ID du gombo dans IVORY_COAST_CROPS
     statut: 'en_croissance', // Changed from "En production" to valid enum value
@@ -41,7 +39,7 @@ const initialParcelles: Parcelle[] = [
     coutsMainOeuvre: 600000, // Main d'œuvre annuelle
     autresCouts: 800000 + 250000 + 150000 + 300000, // Équipements et infrastructure
     rendementAttendu: 7122 * 593.5, // 7122 kg/ha * 593.5 FCFA/kg
-    notes: 'Parcelle de démonstration basée sur les données CNRA/ANADER'
+    notes: 'Parcelle de démonstration basée sur les données CNRA/ANADER - Zone Nord'
   }
 ];
 
