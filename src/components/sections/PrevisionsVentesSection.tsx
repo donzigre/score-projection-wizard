@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +17,35 @@ const PrevisionsVentesSection = () => {
   const [selectedPlantation, setSelectedPlantation] = useState<string>('all');
 
   const allCrops = getAllCrops();
+
+  // Auto-populate product data when parcelle or crop is selected
+  const autoPopulateProductData = (productId: string, parcelleId: string | null, cropId: string | null) => {
+    if (!parcelleId || !cropId) return;
+
+    const parcelle = parcelles.find(p => p.id === parcelleId);
+    const crop = allCrops.find(c => c.id === cropId);
+    
+    if (parcelle && crop) {
+      const updates: any = {
+        parcelleId,
+        cropId,
+        unit: crop.unitType,
+        cycleMonths: crop.cycleMonths,
+        periodeRepos: 0, // Default rest period
+        rendementEstime: crop.averageYieldPerHectare * parcelle.surface,
+        pricePerUnit: crop.regionalPrices.average,
+        cogsPerUnit: Object.values(crop.productionCosts).reduce((sum, cost) => sum + cost, 0) / crop.averageYieldPerHectare
+      };
+
+      // Auto-populate name if empty
+      const currentProduct = data.products.find(p => p.id === productId);
+      if (currentProduct && !currentProduct.name.trim()) {
+        updates.name = `${crop.name} - ${parcelle.nom}`;
+      }
+
+      updateProduct(productId, updates);
+    }
+  };
 
   const calculateCyclesPerYear = (cycleMonths: number, reposPeriod: number) => {
     return Math.floor(12 / (cycleMonths + reposPeriod));
@@ -177,16 +205,14 @@ const PrevisionsVentesSection = () => {
                     <Sprout className="h-5 w-5" />
                     Produit {index + 1}: {product.name || 'Nouveau Produit'}
                   </CardTitle>
-                  {data.products.length > 1 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeProduct(product.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeProduct(product.id)}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
                 
                 {/* Informations sur la plantation et parcelle */}
@@ -234,7 +260,18 @@ const PrevisionsVentesSection = () => {
                     </Label>
                     <Select
                       value={product.parcelleId || 'none'}
-                      onValueChange={(value) => updateProduct(product.id, { parcelleId: value === 'none' ? null : value })}
+                      onValueChange={(value) => {
+                        const parcelleId = value === 'none' ? null : value;
+                        const parcelle = parcelleId ? filteredParcelles.find(p => p.id === parcelleId) : null;
+                        const cropId = parcelle?.cultureActuelle || null;
+                        
+                        updateProduct(product.id, { parcelleId });
+                        
+                        // Auto-populate data when parcelle is selected
+                        if (parcelleId && cropId) {
+                          autoPopulateProductData(product.id, parcelleId, cropId);
+                        }
+                      }}
                     >
                       <SelectTrigger className="mt-1 bg-blue-50 border-blue-200">
                         <SelectValue placeholder="Sélectionner une parcelle" />
@@ -258,6 +295,36 @@ const PrevisionsVentesSection = () => {
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
+                    <Label htmlFor={`crop-select-${product.id}`} className="text-sm font-medium text-gray-700">
+                      Culture (optionnel si parcelle assignée)
+                    </Label>
+                    <Select
+                      value={product.cropId || 'none'}
+                      onValueChange={(value) => {
+                        const cropId = value === 'none' ? null : value;
+                        updateProduct(product.id, { cropId });
+                        
+                        // Auto-populate data when crop is selected
+                        if (product.parcelleId && cropId) {
+                          autoPopulateProductData(product.id, product.parcelleId, cropId);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="mt-1 bg-green-50 border-green-200">
+                        <SelectValue placeholder="Sélectionner une culture" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Aucune culture spécifique</SelectItem>
+                        {allCrops.map(crop => (
+                          <SelectItem key={crop.id} value={crop.id}>
+                            {crop.name} ({crop.category})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
                     <Label htmlFor={`product-unit-${product.id}`} className="text-sm font-medium text-gray-700">
                       Unité de Mesure
                     </Label>
@@ -275,10 +342,14 @@ const PrevisionsVentesSection = () => {
                         <SelectItem value="caisse">Caisses</SelectItem>
                         <SelectItem value="botte">Bottes</SelectItem>
                         <SelectItem value="pièce">Pièces</SelectItem>
+                        <SelectItem value="cuvette">Cuvettes</SelectItem>
+                        <SelectItem value="panier">Paniers</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
 
+                <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor={`price-per-unit-${product.id}`} className="text-sm font-medium text-gray-700">
                       Prix par {product.unit || 'kg'} (FCFA)
@@ -290,6 +361,20 @@ const PrevisionsVentesSection = () => {
                       onChange={(e) => updateProduct(product.id, { pricePerUnit: Number(e.target.value) })}
                       className="mt-1 bg-green-50 border-green-200 focus:border-green-500"
                       placeholder="Prix de vente unitaire"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor={`cogs-per-unit-${product.id}`} className="text-sm font-medium text-gray-700">
+                      Coût Production par {product.unit || 'kg'} (FCFA)
+                    </Label>
+                    <Input
+                      id={`cogs-per-unit-${product.id}`}
+                      type="number"
+                      value={product.cogsPerUnit}
+                      onChange={(e) => updateProduct(product.id, { cogsPerUnit: Number(e.target.value) })}
+                      className="mt-1 bg-red-50 border-red-200 focus:border-red-500"
+                      placeholder="Coût de revient unitaire"
                     />
                   </div>
                 </div>
@@ -306,7 +391,6 @@ const PrevisionsVentesSection = () => {
                       onChange={(e) => updateProduct(product.id, { rendementEstime: Number(e.target.value) })}
                       className="mt-1 bg-blue-50 border-blue-200 focus:border-blue-500"
                       placeholder="Basé sur CNRA/ANADER"
-                      readOnly={!!selectedCrop}
                     />
                     {selectedCrop && assignedParcelle && (
                       <p className="text-xs text-blue-600 mt-1">
@@ -360,20 +444,6 @@ const PrevisionsVentesSection = () => {
                       max="6"
                     />
                   </div>
-
-                  <div>
-                    <Label htmlFor={`cogs-per-unit-${product.id}`} className="text-sm font-medium text-gray-700">
-                      Coût Production par {product.unit || 'kg'} (FCFA)
-                    </Label>
-                    <Input
-                      id={`cogs-per-unit-${product.id}`}
-                      type="number"
-                      value={product.cogsPerUnit}
-                      onChange={(e) => updateProduct(product.id, { cogsPerUnit: Number(e.target.value) })}
-                      className="mt-1 bg-red-50 border-red-200 focus:border-red-500"
-                      placeholder="Coût de revient unitaire"
-                    />
-                  </div>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg">
@@ -425,7 +495,7 @@ const PrevisionsVentesSection = () => {
         <CardContent className="pt-6">
           <div className="text-center">
             <h3 className="text-xl font-semibold text-blue-800 mb-4">
-              Résumé des Prévisions {selectedPlantation ? `- ${plantations.find(p => p.id === selectedPlantation)?.nom}` : 'Globales'}
+              Résumé des Prévisions {selectedPlantation !== 'all' ? `- ${plantations.find(p => p.id === selectedPlantation)?.nom}` : 'Globales'}
             </h3>
             <div className="grid md:grid-cols-3 gap-6">
               <div>
@@ -449,7 +519,7 @@ const PrevisionsVentesSection = () => {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </div>
     </div>
   );
 };

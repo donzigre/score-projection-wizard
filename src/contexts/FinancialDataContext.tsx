@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Product } from '@/types/financial';
 
@@ -192,30 +191,14 @@ interface FinancialDataContextType {
 }
 
 const initialData: FinancialData = {
-  // Pre-populate with gombo cultivation data based on Excel images
-  products: [
-    {
-      id: '1',
-      name: 'GOMBO Juin25 1 Hectare',
-      unitsPerMonth: 0, // Will be calculated based on cycle
-      pricePerUnit: 593.5, // Average price from Excel: 593,500 FCFA / 1000 kg
-      cogsPerUnit: 433.33, // Average cost from Excel: 433,333 FCFA / 1000 kg  
-      cropType: 'maraichage',
-      unit: 'kg',
-      cycleMonths: 4, // Based on gombo cycle
-      periodeRepos: 1,
-      rendementEstime: 7122, // Total production from Excel: 7,122 kg/hectare
-      rendementReel: 7122,
-      cropId: 'gombo',
-      parcelleId: ''
-    }
-  ],
+  // Commencer avec un tableau vide pour permettre l'ajout libre de produits
+  products: [],
   salaries: [
     {
       id: '1',
       name: 'Main-Œuvre Permanente',
       position: 'Ouvrier Agricole',
-      monthlySalary: 50000, // Based on Excel data: 50,000 FCFA/month
+      monthlySalary: 50000,
       monthlyCharges: 10000,
       startMonth: 1
     },
@@ -223,13 +206,13 @@ const initialData: FinancialData = {
       id: '2', 
       name: 'Main-Œuvre Saisonnière',
       position: 'Ouvrier Saisonnier', 
-      monthlySalary: 16000, // Based on Excel: varies by season
+      monthlySalary: 16000,
       monthlyCharges: 3200,
       startMonth: 1
     }
   ],
   operatingCapital: {
-    workingCapital: 500000, // Initial working capital
+    workingCapital: 500000,
     creditLine: 200000,
     creditLineInterestRate: 12
   },
@@ -237,8 +220,8 @@ const initialData: FinancialData = {
     {
       id: '1',
       category: 'Semences',
-      description: 'Semences de Gombo',
-      monthlyAmount: 24167, // 290,000 FCFA / 12 months
+      description: 'Semences diverses',
+      monthlyAmount: 24167,
       growthRate: 0,
       isAutoCalculated: false
     },
@@ -246,7 +229,7 @@ const initialData: FinancialData = {
       id: '2',
       category: 'Engrais',
       description: 'Kit Engrais (URE, NPK1, NPK2)',
-      monthlyAmount: 130000, // 1,560,000 FCFA / 12 months
+      monthlyAmount: 130000,
       growthRate: 0,
       isAutoCalculated: false
     },
@@ -254,7 +237,7 @@ const initialData: FinancialData = {
       id: '3',
       category: 'Pesticides',
       description: 'Kit Phytosanitaire',
-      monthlyAmount: 20833, // 250,000 FCFA / 12 months
+      monthlyAmount: 20833,
       growthRate: 0,
       isAutoCalculated: false
     },
@@ -262,7 +245,7 @@ const initialData: FinancialData = {
       id: '4',
       category: 'Pulvérisateur',
       description: 'Pulvérisateur (25000FCFA/Unt)',
-      monthlyAmount: 4167, // 50,000 FCFA / 12 months
+      monthlyAmount: 4167,
       growthRate: 0,
       isAutoCalculated: false
     },
@@ -270,7 +253,7 @@ const initialData: FinancialData = {
       id: '5',
       category: 'Infrastructure',
       description: 'Echafaudage Citerne',
-      monthlyAmount: 12500, // 150,000 FCFA / 12 months
+      monthlyAmount: 12500,
       growthRate: 0,
       isAutoCalculated: false
     },
@@ -278,7 +261,7 @@ const initialData: FinancialData = {
       id: '6',
       category: 'Infrastructure',
       description: 'Citerne',
-      monthlyAmount: 20833, // 250,000 FCFA / 12 months
+      monthlyAmount: 20833,
       growthRate: 0,
       isAutoCalculated: false
     },
@@ -286,7 +269,7 @@ const initialData: FinancialData = {
       id: '7',
       category: 'Infrastructure',
       description: 'Souffler Forage',
-      monthlyAmount: 25000, // 300,000 FCFA / 12 months
+      monthlyAmount: 25000,
       growthRate: 0,
       isAutoCalculated: false
     },
@@ -294,23 +277,23 @@ const initialData: FinancialData = {
       id: '8',
       category: 'Infrastructure',
       description: 'Pompe Solaire',
-      monthlyAmount: 66667, // 800,000 FCFA / 12 months
+      monthlyAmount: 66667,
       growthRate: 0,
       isAutoCalculated: false
     }
   ],
   
   companyInfo: {
-    preparerName: 'Agriculteur SCORE',
-    companyName: 'Exploitation Agricole Gombo',
-    startingMonth: 'Juin',
+    preparerName: '',
+    companyName: '',
+    startingMonth: 'Janvier',
     startingYear: 2025
   },
   additionalParameters: {
     paymentTerms: {
-      cash: 60, // 60% cash sales
-      net30: 30, // 30% within 30 days
-      net60: 10, // 10% within 60 days
+      cash: 60,
+      net30: 30,
+      net60: 10,
       over60: 0
     },
     supplierPaymentTerms: 30,
@@ -327,140 +310,14 @@ const initialData: FinancialData = {
       depreciationRate: 20
     }
   },
-  fixedAssets: [
-    {
-      id: '1',
-      category: 'Infrastructure Agricole',
-      description: 'Système d\'irrigation complet',
-      name: 'Pompe Solaire + Citerne',
-      quantity: 1,
-      unitPrice: 1050000, // 800,000 + 250,000
-      totalValue: 1050000,
-      depreciationRate: 10,
-      depreciationYears: 10,
-      icon: 'Droplets'
-    },
-    {
-      id: '2',
-      category: 'Equipement',
-      description: 'Equipement de traitement',
-      name: 'Kit Pulvérisateur',
-      quantity: 2,
-      unitPrice: 25000,
-      totalValue: 50000,
-      depreciationRate: 20,
-      depreciationYears: 5,
-      icon: 'Spray'
-    },
-    {
-      id: '3',
-      category: 'Infrastructure',
-      description: 'Infrastructure de stockage',
-      name: 'Echafaudage et Citerne',
-      quantity: 1,
-      unitPrice: 400000, // 150,000 + 250,000
-      totalValue: 400000,
-      depreciationRate: 15,
-      depreciationYears: 7,
-      icon: 'Warehouse'
-    }
-  ],
-  fundingSources: [
-    {
-      id: '1',
-      type: 'Capital Propre',
-      description: 'Investissement personnel',
-      amount: 800000,
-      interestRate: 0,
-      term: 0
-    },
-    {
-      id: '2',
-      type: 'Crédit Agricole',
-      description: 'Prêt pour équipement agricole',
-      amount: 700000,
-      interestRate: 8,
-      term: 60,
-      termYears: 5
-    }
-  ],
-  workingCapitalItems: [
-    {
-      id: '1',
-      category: 'Trésorerie',
-      description: 'Fonds de roulement initial',
-      amount: 500000
-    },
-    {
-      id: '2',
-      category: 'Stock',
-      description: 'Stock initial d\'intrants',
-      amount: 300000
-    }
-  ],
+  fixedAssets: [],
+  fundingSources: [],
+  workingCapitalItems: [],
   payrollData: {
-    employees: [
-      {
-        id: '1',
-        nom: 'Koné',
-        prenom: 'Amadou',
-        poste: 'Chef d\'exploitation',
-        typeContrat: 'CDI',
-        salaireBrut: 80000,
-        heuresParMois: 173,
-        tauxHoraire: 462,
-        cnpsEmploye: 6400,
-        cnpsEmployeur: 16800,
-        autresCharges: 8000,
-        // Legacy compatibility
-        name: 'Amadou Koné',
-        position: 'Chef d\'exploitation',
-        monthlySalary: 80000,
-        monthlyCharges: 24800,
-        startMonth: 1
-      },
-      {
-        id: '2',
-        nom: 'Traoré',
-        prenom: 'Fatou',
-        poste: 'Ouvrière Permanente',
-        typeContrat: 'CDI',
-        salaireBrut: 50000,
-        heuresParMois: 173,
-        tauxHoraire: 289,
-        cnpsEmploye: 4000,
-        cnpsEmployeur: 10500,
-        autresCharges: 5000,
-        // Legacy compatibility
-        name: 'Fatou Traoré',
-        position: 'Ouvrière Permanente',
-        monthlySalary: 50000,
-        monthlyCharges: 15500,
-        startMonth: 1
-      },
-      {
-        id: '3',
-        nom: 'Ouattara',
-        prenom: 'Ibrahim',
-        poste: 'Ouvrier Saisonnier',
-        typeContrat: 'Saisonnier',
-        salaireBrut: 32000,
-        heuresParMois: 100,
-        tauxHoraire: 320,
-        cnpsEmploye: 2560,
-        cnpsEmployeur: 6720,
-        autresCharges: 3200,
-        // Legacy compatibility
-        name: 'Ibrahim Ouattara',
-        position: 'Ouvrier Saisonnier',
-        monthlySalary: 32000,
-        monthlyCharges: 9920,
-        startMonth: 3
-      }
-    ],
-    totalMonthlySalaries: 162000, // 80,000 + 50,000 + 32,000
-    totalMonthlyCharges: 50220, // Sum of all charges
-    totalPayroll: 212220
+    employees: [],
+    totalMonthlySalaries: 0,
+    totalMonthlyCharges: 0,
+    totalPayroll: 0
   }
 };
 
@@ -507,7 +364,6 @@ export const FinancialDataProvider: React.FC<{ children: React.ReactNode }> = ({
     setData(prev => {
       const updatedEmployees = payroll.employees || prev.payrollData.employees;
       
-      // Calculate totals when updating
       const totalMonthlySalaries = updatedEmployees.reduce((total, emp) => {
         return total + (parseFloat(emp.salaireBrut.toString()) || 0);
       }, 0);
@@ -602,7 +458,6 @@ export const FinancialDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const totalMonthlySalaries = calculateTotalSalaries();
   const totalMonthlyCharges = calculateTotalCharges();
 
-  // Enhanced calculations with all required properties
   const totalFixedAssets = data.fixedAssets.reduce((acc, asset) => acc + (asset.quantity * asset.unitPrice), 0);
   const totalFundingSources = data.fundingSources.reduce((acc, source) => acc + source.amount, 0);
   const totalOperatingCapital = data.workingCapitalItems.reduce((acc, item) => acc + item.amount, 0);
